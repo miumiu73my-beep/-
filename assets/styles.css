@@ -312,3 +312,71 @@ button {
     min-height: 120px;
   }
 }
+
+
+.calendar-card {
+  padding: 18px 20px;
+  border: 1px solid rgba(15, 107, 85, 0.14);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: var(--shadow);
+}
+
+.calendar-date-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 7px;
+}
+
+.calendar-date {
+  font-size: clamp(1.05rem, 4.4vw, 1.4rem);
+  font-weight: 800;
+}
+
+.time-period-badge {
+  flex: 0 0 auto;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: var(--green-100);
+  color: var(--green-900);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.calendar-clock {
+  margin: 8px 0 0;
+  font-size: clamp(2rem, 10vw, 3.4rem);
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.calendar-weekend-note {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.time-status {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px 14px;
+  margin-top: 18px;
+  padding: 14px;
+  border-radius: 16px;
+  background: rgba(220, 239, 227, 0.7);
+}
+
+.time-status span {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.time-status strong {
+  color: var(--green-900);
+  font-size: 0.82rem;
+  text-align: right;
+}
