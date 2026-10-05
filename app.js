@@ -6,7 +6,11 @@ import {
 } from "./data/time.js";
 import { loadGameData, saveGameData } from "./save/storage.js";
 import { renderLabScreen } from "./screens/lab.js";
-import { renderFieldScreen } from "./screens/field.js";
+import {
+  applyFieldAction,
+  FIELD_TOOLS,
+  renderFieldScreen,
+} from "./screens/field.js";
 import { renderHomeScreen } from "./screens/home.js";
 
 const screenRoot = document.querySelector("#screen-root");
@@ -23,6 +27,8 @@ let activeScreen = null;
 let gameState = null;
 let session = null;
 let savePromise = Promise.resolve();
+let fieldTool = "till";
+let fieldNotice = "タネを買い、畑を耕してから種まきしてください。";
 
 function normalizeScreen(value) {
   return Object.hasOwn(renderers, value) ? value : "field";
@@ -36,6 +42,8 @@ function buildRenderContext() {
     time: getTimeSnapshot(now),
     session,
     saveData: gameState,
+    fieldTool,
+    fieldNotice,
   };
 }
 
@@ -81,6 +89,52 @@ function refreshHomeIfVisible() {
   }
 }
 
+function runFieldAction(action, options = {}) {
+  const result = applyFieldAction(gameState, {
+    action,
+    now: getCurrentDateTime(),
+    ...options,
+  });
+
+  fieldNotice = result.message;
+
+  if (result.changed) {
+    void persistGameState();
+  }
+
+  renderScreen("field", { syncHash: false });
+}
+
+function handleFieldInteraction(event) {
+  if (activeScreen !== "field") return;
+
+  const toolButton = event.target.closest("[data-field-tool]");
+  if (toolButton) {
+    const nextTool = toolButton.dataset.fieldTool;
+
+    if (FIELD_TOOLS[nextTool]) {
+      fieldTool = nextTool;
+      fieldNotice = `「${FIELD_TOOLS[nextTool].label}」を選びました。畑マスをタップしてください。`;
+      renderScreen("field", { syncHash: false });
+    }
+
+    return;
+  }
+
+  const buyButton = event.target.closest("[data-field-buy]");
+  if (buyButton) {
+    runFieldAction("buy", { cropId: buyButton.dataset.fieldBuy });
+    return;
+  }
+
+  const plotButton = event.target.closest("[data-plot-index]");
+  if (plotButton) {
+    runFieldAction(fieldTool, {
+      plotIndex: Number(plotButton.dataset.plotIndex),
+    });
+  }
+}
+
 async function bootstrap() {
   const bootTime = getCurrentDateTime();
 
@@ -103,6 +157,8 @@ async function bootstrap() {
       renderScreen(button.dataset.screen);
     });
   }
+
+  screenRoot.addEventListener("click", handleFieldInteraction);
 
   window.addEventListener("hashchange", () => {
     renderScreen(location.hash.slice(1), { syncHash: false });
