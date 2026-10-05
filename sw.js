@@ -1,4 +1,4 @@
-const CACHE_NAME = "yasai-seijo-step2-step3-v1";
+const CACHE_NAME = "yasai-seijo-step4-v1";
 
 const APP_SHELL = [
   "./",
@@ -10,6 +10,7 @@ const APP_SHELL = [
   "./assets/icons/icon-192.png",
   "./assets/icons/icon-512.png",
   "./data/app-data.js",
+  "./data/crops.js",
   "./data/time.js",
   "./save/schema.js",
   "./save/storage.js",
