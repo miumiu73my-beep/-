@@ -12,6 +12,7 @@ const DB_NAME = `${SAVE_NAMESPACE}-db`;
 const DB_VERSION = 1;
 const STORE_NAME = "game-state";
 const MAIN_SAVE_KEY = "main";
+const LEGACY_LAST_SAVED_AT_KEY = `${SAVE_NAMESPACE}:last-saved-at`;
 
 let databasePromise = null;
 
@@ -55,6 +56,26 @@ function openDatabase() {
   });
 
   return databasePromise;
+}
+
+function readLegacyLastSavedAt() {
+  try {
+    const value = localStorage.getItem(LEGACY_LAST_SAVED_AT_KEY);
+    if (!value) return null;
+
+    const date = new Date(value);
+    return Number.isFinite(date.getTime()) ? date : null;
+  } catch {
+    return null;
+  }
+}
+
+function clearLegacyLastSavedAt() {
+  try {
+    localStorage.removeItem(LEGACY_LAST_SAVED_AT_KEY);
+  } catch {
+    // localStorageが利用できない環境では何もしない。
+  }
 }
 
 async function readRecord() {
@@ -103,7 +124,15 @@ export async function loadGameData() {
 
     if (!record?.data) {
       const initialData = createDefaultSaveData();
-      return writeRecord(initialData);
+      const legacyLastSavedAt = readLegacyLastSavedAt();
+
+      if (legacyLastSavedAt) {
+        initialData.lastSavedAt = legacyLastSavedAt.toISOString();
+      }
+
+      const saved = await writeRecord(initialData);
+      clearLegacyLastSavedAt();
+      return saved;
     }
 
     const normalized = normalizeSaveData(record.data);
@@ -127,9 +156,14 @@ export async function saveGameData(gameData, savedAt = new Date()) {
 
 export async function updateGameData(update, savedAt = new Date()) {
   const current = await loadGameData();
+  const draft =
+    typeof structuredClone === "function"
+      ? structuredClone(current)
+      : JSON.parse(JSON.stringify(current));
+
   const next =
     typeof update === "function"
-      ? update(structuredClone(current))
+      ? update(draft)
       : { ...current, ...update };
 
   return saveGameData(next, savedAt);
