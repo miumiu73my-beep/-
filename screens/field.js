@@ -21,25 +21,47 @@ function clampProgress(value, max) {
   return Math.max(0, Math.min(max, Number(value) || 0));
 }
 
-function cropProgress(plot, crop) {
+function getPassiveGrowthMs(plot, now = new Date()) {
+  if (!plot?.plantedAt) return 0;
+
+  const plantedAtMs = new Date(plot.plantedAt).getTime();
+  const nowMs = now instanceof Date ? now.getTime() : new Date(now).getTime();
+
+  if (!Number.isFinite(plantedAtMs) || !Number.isFinite(nowMs)) return 0;
+
+  return Math.max(0, nowMs - plantedAtMs);
+}
+
+function cropProgress(plot, crop, now = new Date()) {
   if (!crop) return 0;
-  return clampProgress(plot.growthMs, crop.growMs);
+
+  // growthMsは「ゲームを触った分だけ進む」手動成長ボーナスとして保持する。
+  // 現実時間ぶんはplantedAtから毎回計算するため、アプリを閉じていても
+  // 再起動時に自然に追いつき、起動中の再描画でも二重加算されない。
+  const manualGrowthMs = Math.max(0, Number(plot.growthMs) || 0);
+  const passiveGrowthMs = getPassiveGrowthMs(plot, now);
+
+  return clampProgress(passiveGrowthMs + manualGrowthMs, crop.growMs);
 }
 
-function cropProgressPercent(plot, crop) {
+function cropProgressPercent(plot, crop, now = new Date()) {
   if (!crop || crop.growMs <= 0) return 0;
-  return Math.min(100, Math.round((cropProgress(plot, crop) / crop.growMs) * 100));
+
+  return Math.min(
+    100,
+    Math.round((cropProgress(plot, crop, now) / crop.growMs) * 100)
+  );
 }
 
-function isCropReady(plot, crop) {
-  return Boolean(crop) && cropProgress(plot, crop) >= crop.growMs;
+function isCropReady(plot, crop, now = new Date()) {
+  return Boolean(crop) && cropProgress(plot, crop, now) >= crop.growMs;
 }
 
-function renderPlot(plot, index) {
+function renderPlot(plot, index, now) {
   const crop = getCrop(plot.cropId);
   const state = crop ? "growing" : plot.state === "tilled" ? "tilled" : "empty";
-  const percent = cropProgressPercent(plot, crop);
-  const ready = isCropReady(plot, crop);
+  const percent = cropProgressPercent(plot, crop, now);
+  const ready = isCropReady(plot, crop, now);
 
   let title = `${index + 1}番`;
   let detail = "草地";
@@ -92,6 +114,7 @@ export function renderFieldScreen({
   saveData,
   fieldTool = "till",
   fieldNotice = "",
+  now = new Date(),
 } = {}) {
   const field = saveData?.field;
   const plots = Array.isArray(field?.plots) ? field.plots : [];
@@ -112,7 +135,9 @@ export function renderFieldScreen({
     )
     .join("");
 
-  const plotButtons = plots.map(renderPlot).join("");
+  const plotButtons = plots
+    .map((plot, index) => renderPlot(plot, index, now))
+    .join("");
 
   return `
     <section class="scene scene-field" aria-labelledby="field-title">
@@ -149,8 +174,9 @@ export function renderFieldScreen({
           ${fieldNotice || "タネを買い、畑を耕してから種まきしてください。"}
         </p>
         <p class="gentle-note">
-          STEP 4では水やり1回で${formatGrowthTime(crop.manualGrowthMs)}分だけ成長が進みます。
-          野菜は枯れません。
+          野菜は現実時間で自動的に育ちます。
+          水やり1回でさらに${formatGrowthTime(crop.manualGrowthMs)}分だけ成長が進みます。
+          長く離れていても枯れません。
         </p>
       </div>
     </section>
@@ -244,22 +270,22 @@ export function applyFieldAction(
       return { changed: false, message: "ここには水やりできる野菜がありません。" };
     }
 
-    if (isCropReady(plot, plantedCrop)) {
+    if (isCropReady(plot, plantedCrop, now)) {
       return { changed: false, message: `${plantedCrop.name}はもう収穫できます。` };
     }
 
     plot.watered = true;
     plot.growthMs = Math.min(
       plantedCrop.growMs,
-      cropProgress(plot, plantedCrop) + plantedCrop.manualGrowthMs
+      Math.max(0, Number(plot.growthMs) || 0) + plantedCrop.manualGrowthMs
     );
 
-    const ready = isCropReady(plot, plantedCrop);
+    const ready = isCropReady(plot, plantedCrop, now);
     return {
       changed: true,
       message: ready
         ? `${plantedCrop.name}が育ちました。収穫できます。`
-        : `${plantedCrop.name}に水をやりました。成長 ${cropProgressPercent(plot, plantedCrop)}%`,
+        : `${plantedCrop.name}に水をやりました。成長 ${cropProgressPercent(plot, plantedCrop, now)}%`,
     };
   }
 
@@ -268,10 +294,10 @@ export function applyFieldAction(
       return { changed: false, message: "収穫できる野菜がありません。" };
     }
 
-    if (!isCropReady(plot, plantedCrop)) {
+    if (!isCropReady(plot, plantedCrop, now)) {
       return {
         changed: false,
-        message: `${plantedCrop.name}はまだ育っています。成長 ${cropProgressPercent(plot, plantedCrop)}%`,
+        message: `${plantedCrop.name}はまだ育っています。成長 ${cropProgressPercent(plot, plantedCrop, now)}%`,
       };
     }
 
