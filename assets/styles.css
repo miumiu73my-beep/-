@@ -380,3 +380,226 @@ button {
   font-size: 0.82rem;
   text-align: right;
 }
+
+
+/* STEP 4: 畑システムMVP */
+.field-summary {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 18px 20px;
+  border: 1px solid rgba(15, 107, 85, 0.12);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: var(--shadow);
+}
+
+.field-summary h2 {
+  margin: 5px 0 0;
+  font-size: clamp(1.2rem, 4.6vw, 1.7rem);
+  line-height: 1.35;
+}
+
+.field-money {
+  flex: 0 0 auto;
+  padding: 8px 11px;
+  border-radius: 999px;
+  background: #fff4bd;
+  color: #5f4a16;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+}
+
+.field-shop-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  padding: 14px 16px;
+  border: 1px solid rgba(15, 107, 85, 0.14);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: var(--shadow);
+}
+
+.field-shop-card > div {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.field-shop-card strong {
+  color: var(--green-900);
+  font-size: 1rem;
+}
+
+.field-shop-card span,
+.field-shop-card small {
+  color: var(--muted);
+}
+
+.field-shop-card small {
+  font-size: 0.76rem;
+  line-height: 1.45;
+}
+
+.field-shop-card button,
+.field-tool {
+  min-height: 42px;
+  border: 0;
+  border-radius: 13px;
+  background: var(--green-100);
+  color: var(--green-900);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.field-shop-card button {
+  padding: 8px 12px;
+  white-space: nowrap;
+}
+
+.field-toolbar {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.field-tool {
+  padding: 7px 3px;
+  font-size: 0.75rem;
+}
+
+.field-tool.is-selected {
+  background: var(--green-700);
+  color: white;
+  box-shadow: 0 5px 14px rgba(15, 107, 85, 0.2);
+}
+
+.plot-cell {
+  appearance: none;
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  padding: 8px 5px;
+  border: 2px solid rgba(92, 57, 38, 0.18);
+  border-radius: 14px;
+  display: grid;
+  grid-template-rows: auto 1fr auto auto auto;
+  place-items: center;
+  gap: 2px;
+  color: #513824;
+  font: inherit;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.plot-cell.is-empty {
+  background:
+    radial-gradient(circle at 28% 30%, rgba(255, 255, 255, 0.22) 0 4px, transparent 5px),
+    linear-gradient(145deg, #8dcf79, #6fbc69);
+}
+
+.plot-cell.is-tilled,
+.plot-cell.is-growing {
+  background:
+    repeating-linear-gradient(
+      90deg,
+      var(--soil) 0,
+      var(--soil) 8px,
+      var(--soil-light) 9px,
+      var(--soil-light) 11px
+    );
+}
+
+.plot-cell.is-ready {
+  outline: 3px solid rgba(255, 239, 122, 0.88);
+  outline-offset: -4px;
+}
+
+.plot-cell .plot-number,
+.plot-cell .plot-icon,
+.plot-cell .plot-title,
+.plot-cell .plot-detail,
+.plot-cell .plot-progress,
+.plot-cell .plot-progress > span {
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+}
+
+.plot-cell .plot-number {
+  justify-self: start;
+  font-size: 0.64rem;
+  font-weight: 800;
+  opacity: 0.7;
+}
+
+.plot-cell .plot-icon {
+  align-self: end;
+  font-size: clamp(1.3rem, 6vw, 2rem);
+  line-height: 1;
+}
+
+.plot-cell .plot-title {
+  font-size: 0.74rem;
+  font-weight: 900;
+}
+
+.plot-cell .plot-detail {
+  font-size: 0.62rem;
+  font-weight: 800;
+}
+
+.plot-cell .plot-progress {
+  width: calc(100% - 8px);
+  height: 5px;
+  border-radius: 999px;
+  background: rgba(65, 42, 25, 0.2);
+  overflow: hidden;
+}
+
+.plot-cell .plot-progress > span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: #f3d35b;
+}
+
+.field-guide {
+  display: grid;
+  gap: 8px;
+}
+
+.field-notice {
+  margin: 0;
+  min-height: 48px;
+  padding: 11px 13px;
+  border-radius: 15px;
+  background: rgba(220, 239, 227, 0.78);
+  color: var(--green-900);
+  font-size: 0.86rem;
+  font-weight: 800;
+  line-height: 1.55;
+}
+
+.field-guide .gentle-note {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.55;
+}
+
+@media (max-width: 380px) {
+  .field-toolbar {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .field-summary,
+  .field-shop-card {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+}
