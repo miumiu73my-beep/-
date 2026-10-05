@@ -1,0 +1,32 @@
+{
+  "name": "野菜聖女",
+  "short_name": "野菜聖女",
+  "description": "現実時間でゆるく遊ぶ異世界野菜育成ゲーム",
+  "lang": "ja",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#f7f7eb",
+  "theme_color": "#0f6b55",
+  "icons": [
+    {
+      "src": "./assets/icons/icon-180.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./assets/icons/icon-192.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./assets/icons/icon-512.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
