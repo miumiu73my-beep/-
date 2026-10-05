@@ -83,9 +83,9 @@ function persistGameState(savedAt = getCurrentDateTime()) {
   return savePromise;
 }
 
-function refreshHomeIfVisible() {
-  if (activeScreen === "home") {
-    renderScreen("home", { syncHash: false });
+function refreshTimeDrivenScreen() {
+  if (activeScreen === "home" || activeScreen === "field") {
+    renderScreen(activeScreen, { syncHash: false });
   }
 }
 
@@ -150,6 +150,8 @@ async function bootstrap() {
   });
 
   // 起動できた時点を自動保存する。sessionには起動前の値を保持する。
+  // 作物の放置成長はplantedAtから現在時刻を計算するため、
+  // この保存で起動前の成長時間が失われることはない。
   await persistGameState(bootTime);
 
   for (const button of navButtons) {
@@ -168,19 +170,21 @@ async function bootstrap() {
     void persistGameState();
   });
 
-  window.addEventListener("pageshow", refreshHomeIfVisible);
+  window.addEventListener("pageshow", refreshTimeDrivenScreen);
 
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "hidden") {
       void persistGameState();
     } else {
-      refreshHomeIfVisible();
+      // バックグラウンド中に経過した現実時間を、復帰直後の畑表示へ反映する。
+      refreshTimeDrivenScreen();
     }
   });
 
   setInterval(() => {
     void persistGameState();
-    refreshHomeIfVisible();
+    // 自宅の時計だけでなく、畑の現実時間成長も一定間隔で再描画する。
+    refreshTimeDrivenScreen();
   }, 30_000);
 
   renderScreen(location.hash.slice(1));
