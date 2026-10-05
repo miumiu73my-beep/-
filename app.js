@@ -4,7 +4,7 @@ import {
   getElapsedMilliseconds,
   getTimeSnapshot,
 } from "./data/time.js";
-import { loadLastSavedAt, saveLastSavedAt } from "./save/time-checkpoint.js";
+import { loadGameData, saveGameData } from "./save/storage.js";
 import { renderLabScreen } from "./screens/lab.js";
 import { renderFieldScreen } from "./screens/field.js";
 import { renderHomeScreen } from "./screens/home.js";
@@ -19,15 +19,10 @@ const renderers = {
   home: renderHomeScreen,
 };
 
-const bootTime = getCurrentDateTime();
-const previousSavedAt = loadLastSavedAt();
-const session = Object.freeze({
-  previousSavedAt,
-  elapsedSinceLastSaveMs: getElapsedMilliseconds(previousSavedAt, bootTime),
-});
-
 let activeScreen = null;
-saveLastSavedAt(bootTime);
+let gameState = null;
+let session = null;
+let savePromise = Promise.resolve();
 
 function normalizeScreen(value) {
   return Object.hasOwn(renderers, value) ? value : "field";
@@ -35,10 +30,12 @@ function normalizeScreen(value) {
 
 function buildRenderContext() {
   const now = getCurrentDateTime();
+
   return {
     now,
     time: getTimeSnapshot(now),
     session,
+    saveData: gameState,
   };
 }
 
@@ -61,8 +58,21 @@ function renderScreen(screenKey, { syncHash = true } = {}) {
   }
 }
 
-function saveTimeCheckpoint() {
-  saveLastSavedAt(getCurrentDateTime());
+function persistGameState(savedAt = getCurrentDateTime()) {
+  if (!gameState) return Promise.resolve(null);
+
+  savePromise = savePromise
+    .catch(() => null)
+    .then(async () => {
+      gameState = await saveGameData(gameState, savedAt);
+      return gameState;
+    })
+    .catch((error) => {
+      console.warn("Autosave failed:", error);
+      return null;
+    });
+
+  return savePromise;
 }
 
 function refreshHomeIfVisible() {
@@ -71,30 +81,67 @@ function refreshHomeIfVisible() {
   }
 }
 
-for (const button of navButtons) {
-  button.addEventListener("click", () => {
-    renderScreen(button.dataset.screen);
+async function bootstrap() {
+  const bootTime = getCurrentDateTime();
+
+  gameState = await loadGameData();
+
+  const previousSavedAt = gameState.lastSavedAt
+    ? new Date(gameState.lastSavedAt)
+    : null;
+
+  session = Object.freeze({
+    previousSavedAt,
+    elapsedSinceLastSaveMs: getElapsedMilliseconds(previousSavedAt, bootTime),
   });
+
+  // 起動できた時点を自動保存する。sessionには起動前の値を保持する。
+  await persistGameState(bootTime);
+
+  for (const button of navButtons) {
+    button.addEventListener("click", () => {
+      renderScreen(button.dataset.screen);
+    });
+  }
+
+  window.addEventListener("hashchange", () => {
+    renderScreen(location.hash.slice(1), { syncHash: false });
+  });
+
+  window.addEventListener("pagehide", () => {
+    void persistGameState();
+  });
+
+  window.addEventListener("pageshow", refreshHomeIfVisible);
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") {
+      void persistGameState();
+    } else {
+      refreshHomeIfVisible();
+    }
+  });
+
+  setInterval(() => {
+    void persistGameState();
+    refreshHomeIfVisible();
+  }, 30_000);
+
+  renderScreen(location.hash.slice(1));
 }
 
-window.addEventListener("hashchange", () => {
-  renderScreen(location.hash.slice(1), { syncHash: false });
+bootstrap().catch((error) => {
+  console.error("App startup failed:", error);
+  screenRoot.innerHTML = `
+    <section class="scene">
+      <div class="scene-card">
+        <p class="scene-kicker">起動エラー</p>
+        <h2>セーブデータを読み込めませんでした</h2>
+        <p>ページを再読み込みしてください。</p>
+      </div>
+    </section>
+  `;
 });
-
-window.addEventListener("pagehide", saveTimeCheckpoint);
-window.addEventListener("pageshow", refreshHomeIfVisible);
-
-document.addEventListener("visibilitychange", () => {
-  if (document.visibilityState === "hidden") {
-    saveTimeCheckpoint();
-  } else {
-    refreshHomeIfVisible();
-  }
-});
-
-setInterval(refreshHomeIfVisible, 30_000);
-
-renderScreen(location.hash.slice(1));
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
