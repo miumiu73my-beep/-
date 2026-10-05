@@ -1,6 +1,6 @@
 export const APP_CONFIG = Object.freeze({
   name: "野菜聖女",
-  version: "0.3.1-step2-step3",
+  version: "0.4.0-step4",
   defaultScreen: "field",
 });
 
