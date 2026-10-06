@@ -4,6 +4,13 @@ import {
   formatElapsedDuration,
   getTimeSnapshot,
 } from "../data/time.js";
+import { getFavoriteCharacter } from "../data/characters.js";
+import {
+  getDateChoice,
+  getDateEvent,
+  getDateEventsForCharacter,
+} from "../data/dates.js";
+import { formatCharacterDialogue } from "../data/names.js";
 import { renderHomeNameSettings } from "./name-settings.js";
 
 const CALENDAR_WEEKDAYS = Object.freeze(["日", "月", "火", "水", "木", "金", "土"]);
@@ -72,7 +79,110 @@ function renderMonthCalendar(now) {
   `;
 }
 
-function renderWeekendEntry(isWeekend) {
+function renderDateList(character, saveData) {
+  const events = getDateEventsForCharacter(character.key);
+
+  return `
+    <div class="home-date-entry" aria-label="${character.name}とのデート先">
+      <div class="home-date-entry-header">
+        <p class="scene-kicker">${character.name}との週末</p>
+        <h3>どこへ出かける？</h3>
+        <p>
+          好きなデート先を選べます。行く・行かない、どの選択肢を選ぶかで
+          好感度や野菜品質は変わりません。
+        </p>
+      </div>
+      <div class="date-event-list">
+        ${events
+          .map(
+            (dateEvent) => `
+              <article class="date-event-card">
+                <p class="date-event-place">${dateEvent.place}</p>
+                <h3>${dateEvent.title}</h3>
+                <p>${dateEvent.summary}</p>
+                <button
+                  class="date-action-button"
+                  type="button"
+                  data-date-start="${dateEvent.id}"
+                  data-date-character="${character.key}"
+                >
+                  このデートに行く
+                </button>
+              </article>
+            `
+          )
+          .join("")}
+      </div>
+      <p class="date-neutral-note">
+        今週デートをしなくても、あとから責める台詞や不利益は発生しません。
+      </p>
+    </div>
+  `;
+}
+
+function renderActiveDate(character, dateEvent, saveData, choiceId) {
+  const choice = getDateChoice(dateEvent, choiceId);
+
+  return `
+    <div class="home-date-entry" aria-live="polite">
+      <article class="date-active-card">
+        <div class="date-active-heading">
+          <p class="date-event-place">${dateEvent.place}</p>
+          <h3>${character.name}と「${dateEvent.title}」</h3>
+        </div>
+
+        <p class="date-dialogue">
+          ${formatCharacterDialogue(dateEvent.intro, saveData, character.key)}
+        </p>
+
+        ${
+          choice
+            ? `
+              <div class="date-choice-result">
+                <strong>${choice.label}</strong>
+                <p>${formatCharacterDialogue(
+                  choice.response,
+                  saveData,
+                  character.key
+                )}</p>
+                <p class="date-neutral-note">
+                  この選択で好感度・野菜品質・ゲーム進行上の有利不利は変化しません。
+                </p>
+              </div>
+            `
+            : `
+              <div class="date-choice-list" aria-label="デート中の選択肢">
+                ${dateEvent.choices
+                  .map(
+                    (item) => `
+                      <button
+                        class="date-choice-button"
+                        type="button"
+                        data-date-choice="${item.id}"
+                      >
+                        ${item.label}
+                      </button>
+                    `
+                  )
+                  .join("")}
+              </div>
+            `
+        }
+
+        <div class="date-actions">
+          <button class="date-back-button" type="button" data-date-back>
+            別のデート先を選ぶ
+          </button>
+          <button class="date-back-button" type="button" data-date-end>
+            自宅で過ごす
+          </button>
+        </div>
+      </article>
+    </div>
+  `;
+}
+
+function renderWeekendEntry(isWeekend, saveData, dateSession) {
   if (!isWeekend) {
     return `
       <section class="home-weekend-card is-weekday" aria-labelledby="weekend-title">
@@ -84,18 +194,30 @@ function renderWeekendEntry(isWeekend) {
     `;
   }
 
+  const character = getFavoriteCharacter(saveData);
+  const dateEvent =
+    dateSession?.characterKey === character.key
+      ? getDateEvent(character.key, dateSession.eventId)
+      : null;
+
   return `
     <section class="home-weekend-card is-weekend" aria-labelledby="weekend-title">
       <p class="scene-kicker">週末イベント</p>
-      <h2 id="weekend-title">今日はデートに出かけられます</h2>
-      <p>土日だけ表示される任意の入口です。遊ばなくても不利益はありません。</p>
-      <details class="home-date-entry">
-        <summary>デート入口</summary>
-        <p>
-          デート先・会話イベント・選択肢などの本編はSTEP 14で追加します。
-          STEP 13では週末だけ入口が現れるところまで実装しています。
-        </p>
-      </details>
+      <h2 id="weekend-title">今日は${character.name}とデートに出かけられます</h2>
+      <p>
+        土日だけ遊べる任意コンテンツです。遊ばなくても不利益はなく、
+        選択肢にも正解・不正解はありません。
+      </p>
+      ${
+        dateEvent
+          ? renderActiveDate(
+              character,
+              dateEvent,
+              saveData,
+              dateSession?.choiceId ?? null
+            )
+          : renderDateList(character, saveData)
+      }
     </section>
   `;
 }
@@ -153,7 +275,7 @@ export function renderHomeScreen(context = {}) {
         </div>
       </div>
 
-      ${renderWeekendEntry(time.isWeekend)}
+      ${renderWeekendEntry(time.isWeekend, context.saveData, context.dateSession)}
 
       ${renderHomeNameSettings(context.saveData)}
     </section>
