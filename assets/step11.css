@@ -1,0 +1,187 @@
+/* STEP 11: 主人公名・呼称設定 */
+.name-setup-root:empty {
+  display: none;
+}
+
+body.has-name-setup {
+  overflow: hidden;
+}
+
+.name-setup-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  overflow-y: auto;
+  padding:
+    calc(18px + env(safe-area-inset-top))
+    max(14px, env(safe-area-inset-right))
+    calc(18px + env(safe-area-inset-bottom))
+    max(14px, env(safe-area-inset-left));
+  display: grid;
+  place-items: center;
+  background: rgba(24, 52, 44, 0.58);
+  backdrop-filter: blur(10px);
+  -webkit-overflow-scrolling: touch;
+}
+
+.name-setup-dialog,
+.name-settings-card {
+  width: min(100%, 620px);
+  padding: 20px;
+  border: 1px solid rgba(15, 107, 85, 0.14);
+  border-radius: 26px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: var(--shadow);
+}
+
+.name-setup-dialog {
+  margin: auto;
+}
+
+.name-setup-dialog h2,
+.name-settings-card h2 {
+  margin: 5px 0 8px;
+  font-size: clamp(1.25rem, 5vw, 1.7rem);
+}
+
+.name-setup-copy,
+.name-settings-help {
+  color: #455f56;
+  line-height: 1.65;
+}
+
+.name-setup-copy {
+  margin: 0 0 16px;
+}
+
+.name-settings-form {
+  display: grid;
+  gap: 14px;
+}
+
+.name-custom-field {
+  display: grid;
+  gap: 7px;
+  color: var(--green-900);
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+
+.name-custom-field input {
+  width: 100%;
+  min-height: 48px;
+  padding: 10px 12px;
+  border: 1px solid rgba(15, 107, 85, 0.28);
+  border-radius: 14px;
+  background: white;
+  color: var(--ink);
+  outline: none;
+}
+
+.name-custom-field input:focus {
+  border-color: var(--green-700);
+  box-shadow: 0 0 0 3px rgba(15, 107, 85, 0.12);
+}
+
+.name-settings-help {
+  margin: 0;
+  font-size: 0.82rem;
+}
+
+.name-mode-list {
+  display: grid;
+  gap: 10px;
+}
+
+.name-mode-row {
+  min-width: 0;
+  margin: 0;
+  padding: 12px;
+  border: 1px solid rgba(15, 107, 85, 0.12);
+  border-radius: 16px;
+  background: rgba(247, 247, 235, 0.74);
+}
+
+.name-mode-row legend {
+  padding: 0 5px;
+  color: var(--green-900);
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.name-mode-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.name-mode-option {
+  min-width: 0;
+  padding: 9px 10px;
+  border-radius: 12px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 8px;
+  align-items: center;
+  background: white;
+  cursor: pointer;
+}
+
+.name-mode-option input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--green-700);
+}
+
+.name-mode-option span {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.name-mode-option strong {
+  color: var(--ink);
+  font-size: 0.82rem;
+}
+
+.name-mode-option small {
+  color: var(--muted);
+  font-size: 0.68rem;
+  line-height: 1.35;
+}
+
+.name-settings-error {
+  min-height: 1.4em;
+  margin: 0;
+  color: #9a3f31;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.name-settings-submit {
+  min-height: 48px;
+  border: 0;
+  border-radius: 14px;
+  background: var(--green-700);
+  color: white;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(15, 107, 85, 0.18);
+}
+
+.name-settings-card {
+  display: grid;
+  gap: 8px;
+}
+
+@media (max-width: 430px) {
+  .name-setup-dialog,
+  .name-settings-card {
+    padding: 16px;
+    border-radius: 22px;
+  }
+
+  .name-mode-options {
+    grid-template-columns: 1fr;
+  }
+}
