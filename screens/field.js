@@ -196,6 +196,7 @@ function renderCropShop(saveData, selectedCropId, now) {
           <div class="crop-data">
             <span>タネ ${moneyText(crop.seedPrice)}</span>
             <span>出荷 ${shipmentText}</span>
+            <span>品質 ${shipment.quality.levelName}${shipment.bonusRate > 0 ? `（+${Math.round(shipment.bonusRate * 100)}%）` : ""}</span>
             <span>成長 ${formatGrowthTime(crop.growMs)}</span>
             <span>所持 ${seedCount}個</span>
           </div>
@@ -470,12 +471,12 @@ export function applyFieldAction(
     resetPlot(plot, "tilled");
 
     const qualityText = shipment.qualityBonus > 0
-      ? `（基礎${moneyText(shipment.basePrice)} + 品質${moneyText(shipment.qualityBonus)}）`
-      : "";
+      ? `品質：${shipment.quality.levelName}（基礎${moneyText(shipment.basePrice)} + 品質${moneyText(shipment.qualityBonus)}）`
+      : `品質：${shipment.quality.levelName}`;
 
     return {
       changed: true,
-      message: `${plantedCrop.name}を収穫して出荷しました。+${moneyText(shipment.totalPrice)}${qualityText}`,
+      message: `${plantedCrop.name}を収穫して出荷しました。+${moneyText(shipment.totalPrice)}（${qualityText}）`,
     };
   }
 
