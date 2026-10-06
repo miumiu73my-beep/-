@@ -1,4 +1,5 @@
 import { SCREEN_META } from "./data/app-data.js";
+import { DEFAULT_CROP_ID, getCrop } from "./data/crops.js";
 import {
   getCurrentDateTime,
   getElapsedMilliseconds,
@@ -28,7 +29,8 @@ let gameState = null;
 let session = null;
 let savePromise = Promise.resolve();
 let fieldTool = "till";
-let fieldNotice = "タネを買い、畑を耕してから種まきしてください。";
+let fieldCropId = DEFAULT_CROP_ID;
+let fieldNotice = "育てる野菜を選び、タネを買ってから畑を耕して種まきしてください。";
 
 function normalizeScreen(value) {
   return Object.hasOwn(renderers, value) ? value : "field";
@@ -43,6 +45,7 @@ function buildRenderContext() {
     session,
     saveData: gameState,
     fieldTool,
+    fieldCropId,
     fieldNotice,
   };
 }
@@ -108,6 +111,20 @@ function runFieldAction(action, options = {}) {
 function handleFieldInteraction(event) {
   if (activeScreen !== "field") return;
 
+  const cropButton = event.target.closest("[data-field-crop]");
+  if (cropButton) {
+    const nextCropId = cropButton.dataset.fieldCrop;
+    const crop = getCrop(nextCropId);
+
+    if (crop) {
+      fieldCropId = crop.id;
+      fieldNotice = `${crop.name}を選びました。タネを用意して「種まき」で畑マスをタップしてください。`;
+      renderScreen("field", { syncHash: false });
+    }
+
+    return;
+  }
+
   const toolButton = event.target.closest("[data-field-tool]");
   if (toolButton) {
     const nextTool = toolButton.dataset.fieldTool;
@@ -123,7 +140,11 @@ function handleFieldInteraction(event) {
 
   const buyButton = event.target.closest("[data-field-buy]");
   if (buyButton) {
-    runFieldAction("buy", { cropId: buyButton.dataset.fieldBuy });
+    const cropId = buyButton.dataset.fieldBuy;
+    if (getCrop(cropId)) {
+      fieldCropId = cropId;
+    }
+    runFieldAction("buy", { cropId });
     return;
   }
 
@@ -131,6 +152,7 @@ function handleFieldInteraction(event) {
   if (plotButton) {
     runFieldAction(fieldTool, {
       plotIndex: Number(plotButton.dataset.plotIndex),
+      cropId: fieldCropId,
     });
   }
 }
