@@ -3,6 +3,7 @@ import {
   getCharacterDialogue,
   getFavoriteCharacter,
 } from "../data/characters.js";
+import { formatCharacterDialogue } from "../data/names.js";
 
 const SCREEN_LABELS = Object.freeze({
   lab: "研究所",
@@ -57,7 +58,11 @@ export function renderCharacterStage(saveData, screenKey) {
       <div class="character-stage-copy">
         <p class="scene-kicker">${screenLabel}の固定キャラ</p>
         <h2 id="character-stage-title">${selected.fullName}</h2>
-        <p class="character-dialogue">${getCharacterDialogue(selected, screenKey)}</p>
+        <p class="character-dialogue">${formatCharacterDialogue(
+          getCharacterDialogue(selected, screenKey),
+          saveData,
+          selected.key
+        )}</p>
       </div>
       <div class="character-selector" aria-label="固定表示するキャラクター">
         ${renderCharacterButtons(selected.key)}
