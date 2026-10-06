@@ -1,5 +1,10 @@
 import { SCREEN_META } from "./data/app-data.js";
-import { getCharacter } from "./data/characters.js";
+import { CHARACTER_KEYS, getCharacter } from "./data/characters.js";
+import {
+  hasCompletedNameSetup,
+  NAME_MODES,
+  normalizePlayerName,
+} from "./data/names.js";
 import { DEFAULT_CROP_ID, getCrop } from "./data/crops.js";
 import { applyResearchAction } from "./data/research.js";
 import {
@@ -15,6 +20,7 @@ import {
   renderFieldScreen,
 } from "./screens/field.js";
 import { renderHomeScreen } from "./screens/home.js";
+import { renderInitialNameSetup } from "./screens/name-settings.js";
 import {
   renderCharacterStage,
   renderFieldWalkers,
@@ -23,6 +29,7 @@ import {
 const screenRoot = document.querySelector("#screen-root");
 const screenCaption = document.querySelector("#screen-caption");
 const navButtons = [...document.querySelectorAll("[data-screen]")];
+const nameSetupRoot = document.querySelector("#name-setup-root");
 
 const renderers = {
   lab: renderLabScreen,
@@ -103,6 +110,8 @@ function renderScreen(screenKey, { syncHash = true } = {}) {
   screenRoot.dataset.screen = nextScreen;
   screenCaption.textContent = SCREEN_META[nextScreen].label;
 
+  document.addEventListener("submit", handleNameSettingsSubmit);
+
   for (const button of navButtons) {
     const active = button.dataset.screen === nextScreen;
     button.classList.toggle("is-active", active);
@@ -151,6 +160,53 @@ function runFieldAction(action, options = {}) {
   }
 
   renderScreen("field", { syncHash: false });
+}
+
+
+function syncNameSetupOverlay() {
+  if (!nameSetupRoot || !gameState) return;
+
+  const needsSetup = !hasCompletedNameSetup(gameState);
+  nameSetupRoot.innerHTML = needsSetup
+    ? renderInitialNameSetup(gameState)
+    : "";
+  document.body.classList.toggle("has-name-setup", needsSetup);
+}
+
+async function handleNameSettingsSubmit(event) {
+  const form = event.target.closest("[data-name-settings-form]");
+  if (!form || !gameState) return;
+
+  event.preventDefault();
+
+  const formData = new FormData(form);
+  const customName = normalizePlayerName(formData.get("customName"));
+  const errorElement = form.querySelector("[data-name-error]");
+
+  if (!customName) {
+    if (errorElement) {
+      errorElement.textContent = "主人公の任意名を入力してください。";
+    }
+    form.querySelector('[name="customName"]')?.focus();
+    return;
+  }
+
+  gameState.player ??= {};
+  gameState.player.customName = customName;
+  gameState.player.nameModeByCharacter ??= {};
+
+  for (const characterKey of CHARACTER_KEYS) {
+    const requestedMode = formData.get(`nameMode:${characterKey}`);
+
+    gameState.player.nameModeByCharacter[characterKey] =
+      requestedMode === NAME_MODES.CUSTOM_NAME
+        ? NAME_MODES.CUSTOM_NAME
+        : NAME_MODES.RECEIVER_NAME;
+  }
+
+  await persistGameState();
+  syncNameSetupOverlay();
+  renderScreen(activeScreen ?? "field", { syncHash: false });
 }
 
 function handleCharacterInteraction(event) {
@@ -317,6 +373,7 @@ async function bootstrap() {
   }, 30_000);
 
   renderScreen(location.hash.slice(1));
+  syncNameSetupOverlay();
 }
 
 bootstrap().catch((error) => {
