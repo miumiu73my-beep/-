@@ -1,0 +1,156 @@
+/* STEP 13: 自宅画面 */
+.month-calendar-card,
+.home-weekend-card {
+  padding: 18px 20px;
+  border: 1px solid rgba(15, 107, 85, 0.14);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.84);
+  box-shadow: var(--shadow);
+}
+
+.month-calendar-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.month-calendar-heading h2,
+.home-weekend-card h2 {
+  margin: 5px 0 0;
+  font-size: clamp(1.2rem, 4.8vw, 1.65rem);
+}
+
+.month-calendar-today {
+  flex: 0 0 auto;
+  padding: 6px 9px;
+  border-radius: 999px;
+  background: var(--green-100);
+  color: var(--green-900);
+  font-size: 0.76rem;
+  font-weight: 900;
+}
+
+.month-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 5px;
+}
+
+.month-calendar-weekday,
+.month-calendar-day {
+  min-width: 0;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.month-calendar-weekday {
+  padding: 3px 0 5px;
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 900;
+}
+
+.month-calendar-day {
+  aspect-ratio: 1;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: rgba(247, 247, 235, 0.76);
+  color: var(--ink);
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.month-calendar-day.is-empty {
+  background: transparent;
+}
+
+.month-calendar-weekday.is-sunday,
+.month-calendar-day.is-sunday {
+  color: #a84b43;
+}
+
+.month-calendar-weekday.is-saturday,
+.month-calendar-day.is-saturday {
+  color: #3f6fa0;
+}
+
+.month-calendar-day.is-today {
+  background: var(--green-700);
+  color: white;
+  box-shadow: 0 5px 12px rgba(15, 107, 85, 0.22);
+}
+
+.home-weekend-card {
+  display: grid;
+  gap: 8px;
+}
+
+.home-weekend-card > p:not(.scene-kicker) {
+  margin: 0;
+  color: #455f56;
+  line-height: 1.7;
+}
+
+.home-weekend-card.is-weekend {
+  border-color: rgba(15, 107, 85, 0.24);
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.92), rgba(220, 239, 227, 0.82));
+}
+
+.home-weekend-note {
+  color: var(--muted) !important;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.home-date-entry {
+  margin-top: 8px;
+  border-radius: 16px;
+  background: var(--green-100);
+  overflow: hidden;
+}
+
+.home-date-entry summary {
+  min-height: 48px;
+  padding: 12px 14px;
+  display: grid;
+  align-items: center;
+  color: var(--green-900);
+  font-weight: 900;
+  cursor: pointer;
+  list-style-position: inside;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.home-date-entry[open] summary {
+  background: var(--green-700);
+  color: white;
+}
+
+.home-date-entry p {
+  margin: 0;
+  padding: 12px 14px 15px;
+  color: #455f56;
+  font-size: 0.82rem;
+  line-height: 1.65;
+}
+
+@media (max-width: 430px) {
+  .month-calendar-card,
+  .home-weekend-card {
+    padding: 16px;
+    border-radius: 22px;
+  }
+
+  .month-calendar-heading {
+    align-items: flex-start;
+  }
+
+  .month-calendar-day {
+    border-radius: 9px;
+    font-size: 0.72rem;
+  }
+}
