@@ -1,5 +1,5 @@
 const CACHE_PREFIX = "yasai-seijo-";
-const CACHE_VERSION = "step12-v1";
+const CACHE_VERSION = "step15-v1";
 const PRECACHE_NAME = `${CACHE_PREFIX}precache-${CACHE_VERSION}`;
 const RUNTIME_CACHE_NAME = `${CACHE_PREFIX}runtime-${CACHE_VERSION}`;
 
@@ -14,17 +14,11 @@ const APP_SHELL = [
   "./assets/step13.css",
   "./assets/step14.css",
   "./assets/step16.css",
-  "./assets/backgrounds/lab.svg",
-  "./assets/backgrounds/field.svg",
-  "./assets/backgrounds/home.svg",
-  "./assets/characters/portraits/ichika.svg",
-  "./assets/characters/portraits/chihaya.svg",
-  "./assets/characters/portraits/uryu.svg",
-  "./assets/characters/portraits/shuka.svg",
-  "./assets/characters/chibi/ichika.svg",
-  "./assets/characters/chibi/chihaya.svg",
-  "./assets/characters/chibi/uryu.svg",
-  "./assets/characters/chibi/shuka.svg",
+  "./assets/backgrounds/lab.webp",
+  "./assets/backgrounds/field.webp",
+  "./assets/backgrounds/home.webp",
+  "./assets/characters/portraits.webp",
+  "./assets/characters/chibi-atlas.webp",
   "./assets/icons/icon-180.png",
   "./assets/icons/icon-192.png",
   "./assets/icons/icon-512.png",
