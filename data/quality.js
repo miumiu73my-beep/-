@@ -1,4 +1,5 @@
 export const DEFAULT_BASE_QUALITY = 1;
+export const MAX_RESEARCH_BONUS = 0.6;
 
 export const QUALITY_LEVELS = Object.freeze(
   [
@@ -11,26 +12,26 @@ export const QUALITY_LEVELS = Object.freeze(
     {
       id: "good",
       name: "良質",
-      minScore: 1.2,
-      bonusRate: 0.1,
+      minScore: 1.15,
+      bonusRate: 0.05,
     },
     {
       id: "fine",
       name: "上質",
-      minScore: 1.5,
-      bonusRate: 0.2,
+      minScore: 1.3,
+      bonusRate: 0.1,
     },
     {
       id: "special",
       name: "特選",
-      minScore: 1.8,
-      bonusRate: 0.35,
+      minScore: 1.45,
+      bonusRate: 0.15,
     },
     {
       id: "premium",
       name: "極上",
-      minScore: 2.2,
-      bonusRate: 0.5,
+      minScore: 1.6,
+      bonusRate: 0.2,
     },
   ].map((level) => Object.freeze(level))
 );
@@ -61,8 +62,9 @@ export function calculateCropQuality(saveData, crop = null) {
     saveData?.quality?.base,
     DEFAULT_BASE_QUALITY
   );
-  const researchBonus = nonNegativeNumber(
-    saveData?.quality?.researchBonus
+  const researchBonus = Math.min(
+    MAX_RESEARCH_BONUS,
+    nonNegativeNumber(saveData?.quality?.researchBonus)
   );
   const cropBonus = crop?.id
     ? nonNegativeNumber(saveData?.quality?.byCrop?.[crop.id])
