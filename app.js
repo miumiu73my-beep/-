@@ -110,8 +110,6 @@ function renderScreen(screenKey, { syncHash = true } = {}) {
   screenRoot.dataset.screen = nextScreen;
   screenCaption.textContent = SCREEN_META[nextScreen].label;
 
-  document.addEventListener("submit", handleNameSettingsSubmit);
-
   for (const button of navButtons) {
     const active = button.dataset.screen === nextScreen;
     button.classList.toggle("is-active", active);
@@ -336,6 +334,8 @@ async function bootstrap() {
   // 作物の放置成長はplantedAtから現在時刻を計算するため、
   // この保存で起動前の成長時間が失われることはない。
   await persistGameState(bootTime);
+
+  document.addEventListener("submit", handleNameSettingsSubmit);
 
   for (const button of navButtons) {
     button.addEventListener("click", () => {
