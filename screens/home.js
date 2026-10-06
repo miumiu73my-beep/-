@@ -12,6 +12,7 @@ import {
 } from "../data/dates.js";
 import { formatCharacterDialogue } from "../data/names.js";
 import { renderHomeNameSettings } from "./name-settings.js";
+import { renderSaveManagement } from "./save-management.js";
 
 const CALENDAR_WEEKDAYS = Object.freeze(["日", "月", "火", "水", "木", "金", "土"]);
 
@@ -276,6 +277,12 @@ export function renderHomeScreen(context = {}) {
       </div>
 
       ${renderWeekendEntry(time.isWeekend, context.saveData, context.dateSession)}
+
+      ${renderSaveManagement(
+        context.saveData,
+        context.saveHealth,
+        context.saveNotice
+      )}
 
       ${renderHomeNameSettings(context.saveData)}
     </section>

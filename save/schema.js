@@ -267,3 +267,45 @@ export function normalizeSaveData(rawData) {
 
   return normalized;
 }
+
+
+export function validateSaveData(rawData) {
+  if (!isPlainObject(rawData)) {
+    throw new Error("セーブデータの形式が正しくありません。");
+  }
+
+  const version = Number(rawData.version ?? 0);
+
+  if (!Number.isInteger(version) || version < 0) {
+    throw new Error("セーブデータのversionが正しくありません。");
+  }
+
+  if (version > SAVE_VERSION) {
+    throw new Error(
+      `このセーブデータは新しいバージョンです。saveVersion=${version}`
+    );
+  }
+
+  for (const section of ["player", "economy", "field"]) {
+    if (!isPlainObject(rawData[section])) {
+      throw new Error(`セーブデータの${section}領域が見つかりません。`);
+    }
+  }
+
+  if (
+    rawData.field.plots !== undefined &&
+    !Array.isArray(rawData.field.plots)
+  ) {
+    throw new Error("畑データの形式が正しくありません。");
+  }
+
+  if (rawData.lastSavedAt !== undefined && rawData.lastSavedAt !== null) {
+    const timestamp = Date.parse(rawData.lastSavedAt);
+
+    if (!Number.isFinite(timestamp)) {
+      throw new Error("最終保存時刻の形式が正しくありません。");
+    }
+  }
+
+  return normalizeSaveData(rawData);
+}

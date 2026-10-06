@@ -1,0 +1,162 @@
+/* STEP 16: 自動保存・バックアップ */
+.save-backup-card {
+  padding: 18px 20px;
+  border: 1px solid rgba(15, 107, 85, 0.16);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: var(--shadow);
+}
+
+.save-backup-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.save-backup-heading h2 {
+  margin: 5px 0 0;
+  font-size: clamp(1.2rem, 4.8vw, 1.65rem);
+}
+
+.save-version-badge {
+  flex: 0 0 auto;
+  padding: 6px 9px;
+  border-radius: 999px;
+  background: var(--green-100);
+  color: var(--green-900);
+  font-size: 0.76rem;
+  font-weight: 900;
+}
+
+.save-backup-description {
+  margin: 12px 0 0;
+  color: #455f56;
+  line-height: 1.7;
+}
+
+.save-status-grid {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 6px 12px;
+  background: rgba(220, 239, 227, 0.62);
+}
+
+.save-status-grid span {
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.save-status-grid strong {
+  min-width: 0;
+  color: var(--ink);
+  font-size: 0.82rem;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.save-action-grid {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.save-action-grid button,
+.save-file-button,
+.save-reset-button {
+  min-height: 44px;
+  padding: 9px 11px;
+  border: 0;
+  border-radius: 13px;
+  display: grid;
+  place-items: center;
+  background: var(--green-700);
+  color: white;
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-align: center;
+  cursor: pointer;
+}
+
+.save-action-grid button:disabled {
+  background: #c8d8d1;
+  color: #587068;
+  cursor: default;
+}
+
+.save-file-button input {
+  display: none;
+}
+
+.save-reset-button {
+  width: 100%;
+  margin-top: 8px;
+  background: #8b4a43;
+}
+
+.save-management-notice {
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  border-radius: 13px;
+  background: rgba(220, 239, 227, 0.62);
+  color: #35584d;
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.6;
+}
+
+.save-management-notice.is-success {
+  background: rgba(213, 239, 221, 0.82);
+  color: #245d40;
+}
+
+.save-management-notice.is-warning {
+  background: rgba(246, 229, 185, 0.72);
+  color: #6d5417;
+}
+
+.save-management-notice.is-error {
+  background: rgba(244, 214, 210, 0.78);
+  color: #7a3b34;
+}
+
+.save-backup-details {
+  margin-top: 10px;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.save-backup-details summary {
+  color: var(--green-900);
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.save-backup-details p {
+  margin: 8px 0 0;
+  line-height: 1.65;
+}
+
+@media (max-width: 430px) {
+  .save-backup-card {
+    padding: 16px;
+    border-radius: 22px;
+  }
+
+  .save-action-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .save-status-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .save-status-grid strong {
+    text-align: left;
+  }
+}

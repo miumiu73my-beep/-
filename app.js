@@ -17,7 +17,15 @@ import {
   getElapsedMilliseconds,
   getTimeSnapshot,
 } from "./data/time.js";
-import { loadGameData, saveGameData } from "./save/storage.js";
+import {
+  createSaveExport,
+  getSaveHealth,
+  importGameData,
+  loadGameData,
+  resetGameData,
+  restoreLatestBackup,
+  saveGameData,
+} from "./save/storage.js";
 import { renderLabScreen } from "./screens/lab.js";
 import {
   applyFieldAction,
@@ -51,6 +59,8 @@ let fieldCropId = DEFAULT_CROP_ID;
 let fieldNotice = "育てる野菜を選び、タネを買ってから畑を耕して種まきしてください。";
 let labNotice = "研究所の利用は任意です。気になる講座や本から、好きな時に進めてください。";
 let dateSession = null;
+let saveNotice = null;
+let saveMutationInProgress = false;
 
 function normalizeScreen(value) {
   return Object.hasOwn(renderers, value) ? value : "field";
@@ -69,6 +79,8 @@ function buildRenderContext() {
     fieldNotice,
     labNotice,
     dateSession,
+    saveHealth: getSaveHealth(),
+    saveNotice,
   };
 }
 
@@ -129,7 +141,7 @@ function renderScreen(screenKey, { syncHash = true } = {}) {
 }
 
 function persistGameState(savedAt = getCurrentDateTime()) {
-  if (!gameState) return Promise.resolve(null);
+  if (!gameState || saveMutationInProgress) return Promise.resolve(gameState);
 
   savePromise = savePromise
     .catch(() => null)
@@ -394,6 +406,184 @@ function handleLabInteraction(event) {
   }
 }
 
+function setSaveNotice(type, text) {
+  saveNotice = { type, text };
+}
+
+function refreshSessionFromGameState() {
+  const now = getCurrentDateTime();
+  const savedAt = gameState?.lastSavedAt ? new Date(gameState.lastSavedAt) : null;
+  const validSavedAt =
+    savedAt && Number.isFinite(savedAt.getTime()) ? savedAt : null;
+
+  session = Object.freeze({
+    previousSavedAt: validSavedAt,
+    elapsedSinceLastSaveMs: getElapsedMilliseconds(validSavedAt, now),
+  });
+}
+
+async function replaceStoredGameState(operation) {
+  saveMutationInProgress = true;
+
+  try {
+    await savePromise.catch(() => null);
+    gameState = await operation();
+    dateSession = null;
+    refreshSessionFromGameState();
+    syncNameSetupOverlay();
+    return gameState;
+  } finally {
+    saveMutationInProgress = false;
+  }
+}
+
+function downloadSaveExport(exported) {
+  const blob = new Blob([exported.text], {
+    type: "application/json;charset=utf-8",
+  });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+
+  link.href = url;
+  link.download = exported.filename;
+  link.hidden = true;
+  document.body.append(link);
+  link.click();
+  link.remove();
+
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+async function handleSaveInteraction(event) {
+  if (activeScreen !== "home" || !gameState) return;
+
+  const saveNowButton = event.target.closest("[data-save-now]");
+  if (saveNowButton) {
+    const saved = await persistGameState();
+
+    if (saved) {
+      setSaveNotice("success", "現在の状態を保存しました。");
+    } else {
+      setSaveNotice(
+        "error",
+        getSaveHealth().message || "保存できませんでした。"
+      );
+    }
+
+    renderScreen("home", { syncHash: false });
+    return;
+  }
+
+  const exportButton = event.target.closest("[data-save-export]");
+  if (exportButton) {
+    const saved = await persistGameState();
+
+    if (!saved) {
+      setSaveNotice(
+        "error",
+        getSaveHealth().message || "保存できないため書き出しを中止しました。"
+      );
+      renderScreen("home", { syncHash: false });
+      return;
+    }
+
+    try {
+      downloadSaveExport(createSaveExport(gameState));
+      setSaveNotice(
+        "success",
+        "セーブデータをJSONファイルとして書き出しました。"
+      );
+    } catch (error) {
+      setSaveNotice(
+        "error",
+        error instanceof Error ? error.message : "書き出しに失敗しました。"
+      );
+    }
+
+    renderScreen("home", { syncHash: false });
+    return;
+  }
+
+  const restoreButton = event.target.closest("[data-save-restore]");
+  if (restoreButton) {
+    const approved = window.confirm(
+      "端末内の直近バックアップへ戻します。現在の状態も復元前バックアップとして残します。続けますか？"
+    );
+    if (!approved) return;
+
+    try {
+      await replaceStoredGameState(() => restoreLatestBackup());
+      setSaveNotice(
+        "success",
+        "端末内バックアップからセーブデータを復元しました。"
+      );
+    } catch (error) {
+      setSaveNotice(
+        "error",
+        error instanceof Error ? error.message : "復元に失敗しました。"
+      );
+    }
+
+    renderScreen("home", { syncHash: false });
+    return;
+  }
+
+  const resetButton = event.target.closest("[data-save-reset]");
+  if (resetButton) {
+    const approved = window.confirm(
+      "新しいセーブデータを作ります。復旧不能な元データは退避済みですが、ゲームは初期状態から再開します。続けますか？"
+    );
+    if (!approved) return;
+
+    try {
+      await replaceStoredGameState(() => resetGameData());
+      setSaveNotice("success", "新しいセーブデータを作成しました。");
+    } catch (error) {
+      setSaveNotice(
+        "error",
+        error instanceof Error ? error.message : "初期化に失敗しました。"
+      );
+    }
+
+    renderScreen("home", { syncHash: false });
+  }
+}
+
+async function handleSaveImport(event) {
+  const input = event.target.closest("[data-save-import]");
+  if (!input || !gameState) return;
+
+  const file = input.files?.[0];
+  if (!file) return;
+
+  const approved = window.confirm(
+    "選んだJSONからセーブデータを読み込みます。現在の状態は端末内バックアップへ退避してから置き換えます。続けますか？"
+  );
+
+  if (!approved) {
+    input.value = "";
+    return;
+  }
+
+  try {
+    const text = await file.text();
+    await replaceStoredGameState(() => importGameData(text));
+    setSaveNotice(
+      "success",
+      "バックアップファイルを検証してセーブデータを復元しました。"
+    );
+  } catch (error) {
+    setSaveNotice(
+      "error",
+      error instanceof Error ? error.message : "読み込みに失敗しました。"
+    );
+  } finally {
+    input.value = "";
+  }
+
+  renderScreen("home", { syncHash: false });
+}
+
 async function bootstrap() {
   const bootTime = getCurrentDateTime();
 
@@ -425,12 +615,26 @@ async function bootstrap() {
   screenRoot.addEventListener("click", handleHomeInteraction);
   screenRoot.addEventListener("click", handleFieldInteraction);
   screenRoot.addEventListener("click", handleLabInteraction);
+  screenRoot.addEventListener("click", (event) => {
+    void handleSaveInteraction(event);
+  });
+  screenRoot.addEventListener("change", (event) => {
+    void handleSaveImport(event);
+  });
 
   window.addEventListener("hashchange", () => {
     renderScreen(location.hash.slice(1), { syncHash: false });
   });
 
   window.addEventListener("pagehide", () => {
+    void persistGameState();
+  });
+
+  window.addEventListener("beforeunload", () => {
+    void persistGameState();
+  });
+
+  document.addEventListener("freeze", () => {
     void persistGameState();
   });
 
