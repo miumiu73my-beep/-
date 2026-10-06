@@ -148,6 +148,12 @@ function handleFieldInteraction(event) {
     return;
   }
 
+  const expandButton = event.target.closest("[data-field-expand]");
+  if (expandButton) {
+    runFieldAction("expand");
+    return;
+  }
+
   const plotButton = event.target.closest("[data-plot-index]");
   if (plotButton) {
     runFieldAction(fieldTool, {
