@@ -101,13 +101,13 @@ function activateCharacterAssets() {
   }
 }
 
-function decorateCharacterSystem(screenKey) {
+function decorateCharacterSystem(screenKey, context) {
   const scene = screenRoot.querySelector(".scene");
   if (!scene) return;
 
   scene.insertAdjacentHTML(
     "afterbegin",
-    renderCharacterStage(gameState, screenKey)
+    renderCharacterStage(gameState, screenKey, context)
   );
 
   if (screenKey === "field") {
@@ -124,8 +124,10 @@ function renderScreen(screenKey, { syncHash = true } = {}) {
   const nextScreen = normalizeScreen(screenKey);
   activeScreen = nextScreen;
 
-  screenRoot.innerHTML = renderers[nextScreen](buildRenderContext());
-  decorateCharacterSystem(nextScreen);
+  const context = buildRenderContext();
+
+  screenRoot.innerHTML = renderers[nextScreen](context);
+  decorateCharacterSystem(nextScreen, context);
   screenRoot.dataset.screen = nextScreen;
   screenCaption.textContent = SCREEN_META[nextScreen].label;
 
