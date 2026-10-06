@@ -4,6 +4,7 @@ import {
   formatElapsedDuration,
   getTimeSnapshot,
 } from "../data/time.js";
+import { renderHomeNameSettings } from "./name-settings.js";
 
 export function renderHomeScreen(context = {}) {
   const now = context.now instanceof Date ? context.now : new Date();
@@ -55,6 +56,8 @@ export function renderHomeScreen(context = {}) {
           <span>${time.isWeekend ? "週末" : "平日"}</span>
         </div>
       </div>
+
+      ${renderHomeNameSettings(context.saveData)}
     </section>
   `;
 }
