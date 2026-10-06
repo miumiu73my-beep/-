@@ -1,3 +1,7 @@
+import { MAX_RESEARCH_BONUS } from "./quality.js";
+
+export const COURSE_REVIEW_BONUS = 0.01;
+
 export const RESEARCH_COURSES = Object.freeze(
   [
     {
@@ -86,6 +90,20 @@ function roundBonus(value) {
   return Math.round(nonNegativeNumber(value) * 100) / 100;
 }
 
+function addResearchBonus(saveData, requestedBonus) {
+  const before = Math.min(
+    MAX_RESEARCH_BONUS,
+    roundBonus(saveData?.quality?.researchBonus)
+  );
+  const after = Math.min(
+    MAX_RESEARCH_BONUS,
+    roundBonus(before + requestedBonus)
+  );
+
+  saveData.quality.researchBonus = after;
+  return roundBonus(after - before);
+}
+
 function ensureResearchData(saveData) {
   if (!saveData || typeof saveData !== "object") return false;
 
@@ -101,8 +119,9 @@ function ensureResearchData(saveData) {
     saveData.research.studyRecords = [];
   }
 
-  saveData.quality.researchBonus = nonNegativeNumber(
-    saveData.quality.researchBonus
+  saveData.quality.researchBonus = Math.min(
+    MAX_RESEARCH_BONUS,
+    roundBonus(saveData.quality.researchBonus)
   );
 
   return true;
@@ -153,17 +172,30 @@ export function applyResearchAction(
       return { changed: false, message: "その講座はまだ開講されていません。" };
     }
 
-    if (!saveData.research.completedCourses.includes(course.id)) {
+    const firstCompletion = !saveData.research.completedCourses.includes(course.id);
+    const requestedBonus = firstCompletion ? course.bonus : COURSE_REVIEW_BONUS;
+    const appliedBonus = addResearchBonus(saveData, requestedBonus);
+
+    if (firstCompletion) {
       saveData.research.completedCourses.push(course.id);
     }
 
-    saveData.quality.researchBonus = roundBonus(
-      saveData.quality.researchBonus + course.bonus
-    );
+    if (!firstCompletion && appliedBonus <= 0) {
+      return {
+        changed: false,
+        message: `研究補正は上限の+${MAX_RESEARCH_BONUS.toFixed(2)}です。講座はいつでも復習できます。`,
+      };
+    }
+
+    const actionLabel = firstCompletion ? "受講" : "復習";
+    const capText =
+      saveData.quality.researchBonus >= MAX_RESEARCH_BONUS
+        ? "（研究補正は上限に達しました）"
+        : "";
 
     return {
-      changed: true,
-      message: `${course.title}を受講しました。研究補正 +${course.bonus.toFixed(2)}`,
+      changed: firstCompletion || appliedBonus > 0,
+      message: `${course.title}を${actionLabel}しました。研究補正 +${appliedBonus.toFixed(2)}${capText}`,
     };
   }
 
@@ -174,24 +206,33 @@ export function applyResearchAction(
       return { changed: false, message: "その資料はまだ図書室にありません。" };
     }
 
+    if (saveData.quality.researchBonus >= MAX_RESEARCH_BONUS) {
+      return {
+        changed: false,
+        message: `研究補正は上限の+${MAX_RESEARCH_BONUS.toFixed(2)}です。図書室はいつでも読み返せます。`,
+      };
+    }
+
     const studiedAt =
       now instanceof Date && Number.isFinite(now.getTime())
         ? now.toISOString()
         : new Date().toISOString();
+    const appliedBonus = addResearchBonus(saveData, topic.bonus);
 
     saveData.research.studyRecords.push({
       topicId: topic.id,
       studiedAt,
-      bonus: topic.bonus,
+      bonus: appliedBonus,
     });
 
-    saveData.quality.researchBonus = roundBonus(
-      saveData.quality.researchBonus + topic.bonus
-    );
+    const capText =
+      saveData.quality.researchBonus >= MAX_RESEARCH_BONUS
+        ? "（研究補正は上限に達しました）"
+        : "";
 
     return {
-      changed: true,
-      message: `${topic.title}を読みました。研究補正 +${topic.bonus.toFixed(2)}`,
+      changed: appliedBonus > 0,
+      message: `${topic.title}を読みました。研究補正 +${appliedBonus.toFixed(2)}${capText}`,
     };
   }
 
