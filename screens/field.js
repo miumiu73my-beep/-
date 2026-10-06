@@ -1,8 +1,11 @@
 import {
-  CROPS,
+  CROP_LIST,
   DEFAULT_CROP_ID,
   formatGrowthTime,
   getCrop,
+  getSeasonForDate,
+  getSeasonName,
+  isCropInSeason,
 } from "../data/crops.js";
 
 export const FIELD_TOOLS = Object.freeze({
@@ -81,7 +84,7 @@ function renderPlot(plot, index, now) {
       aria-label="${index + 1}番の畑：${detail}"
     >
       <span class="plot-number">${index + 1}</span>
-      <span class="plot-icon" aria-hidden="true">${crop ? (ready ? "🥬" : "🌱") : state === "tilled" ? "・" : "✦"}</span>
+      <span class="plot-icon" aria-hidden="true">${crop ? (ready ? crop.icon : "🌱") : state === "tilled" ? "・" : "✦"}</span>
       <span class="plot-title">${title}</span>
       <span class="plot-detail">${detail}</span>
       ${
@@ -110,17 +113,62 @@ function resetPlot(plot, state = "empty") {
   plot.growthMs = 0;
 }
 
+function sortCropsForDisplay(now) {
+  const currentSeason = getSeasonForDate(now);
+  return [...CROP_LIST].sort((a, b) => {
+    const aCurrent = a.season === currentSeason ? 0 : 1;
+    const bCurrent = b.season === currentSeason ? 0 : 1;
+    return aCurrent - bCurrent;
+  });
+}
+
+function renderCropShop(saveData, selectedCropId, now) {
+  const cards = sortCropsForDisplay(now)
+    .map((crop) => {
+      const seedCount = Number(saveData?.inventory?.seeds?.[crop.id]) || 0;
+      const selected = crop.id === selectedCropId;
+      const inSeason = isCropInSeason(crop.id, now);
+
+      return `
+        <article class="crop-card${selected ? " is-selected" : ""}">
+          <button
+            class="crop-select"
+            type="button"
+            data-field-crop="${crop.id}"
+            aria-pressed="${selected ? "true" : "false"}"
+          >
+            <span class="crop-icon" aria-hidden="true">${crop.icon}</span>
+            <span class="crop-name">${crop.name}</span>
+            <span class="crop-season">${getSeasonName(crop.season)}${inSeason ? "・旬" : ""}</span>
+          </button>
+          <div class="crop-data">
+            <span>タネ ${moneyText(crop.seedPrice)}</span>
+            <span>出荷 ${moneyText(crop.sellPrice)}</span>
+            <span>成長 ${formatGrowthTime(crop.growMs)}</span>
+            <span>所持 ${seedCount}個</span>
+          </div>
+          <button class="crop-buy" type="button" data-field-buy="${crop.id}">1個買う</button>
+        </article>
+      `;
+    })
+    .join("");
+
+  return `<div class="crop-shop-grid">${cards}</div>`;
+}
+
 export function renderFieldScreen({
   saveData,
   fieldTool = "till",
+  fieldCropId = DEFAULT_CROP_ID,
   fieldNotice = "",
   now = new Date(),
 } = {}) {
   const field = saveData?.field;
   const plots = Array.isArray(field?.plots) ? field.plots : [];
-  const crop = CROPS[DEFAULT_CROP_ID];
-  const seedCount = Number(saveData?.inventory?.seeds?.[crop.id]) || 0;
+  const selectedCrop = getCrop(fieldCropId) ?? getCrop(DEFAULT_CROP_ID);
   const money = Number(saveData?.economy?.money) || 0;
+  const currentSeason = getSeasonForDate(now);
+  const currentMonth = now.getMonth() + 1;
 
   const toolButtons = Object.values(FIELD_TOOLS)
     .map(
@@ -145,21 +193,21 @@ export function renderFieldScreen({
         <div>
           <p class="scene-kicker">畑</p>
           <h2 id="field-title">与えられた畑で、のんびり育てよう</h2>
+          <p class="field-season-note">${currentMonth}月は${getSeasonName(currentSeason)}。旬以外の野菜も枯れずに育てられます。</p>
         </div>
         <div class="field-money" aria-label="所持金">${moneyText(money)}</div>
       </div>
 
-      <div class="field-shop-card">
-        <div>
-          <strong>${crop.name}のタネ</strong>
-          <span>所持 ${seedCount}個</span>
-          <small>
-            1個 ${moneyText(crop.seedPrice)} ／ 出荷 ${moneyText(crop.sellPrice)} ／
-            成長目安 ${formatGrowthTime(crop.growMs)}
-          </small>
+      <section class="crop-shop" aria-labelledby="crop-shop-title">
+        <div class="crop-shop-heading">
+          <div>
+            <p class="scene-kicker">タネ屋</p>
+            <h3 id="crop-shop-title">育てる野菜を選ぶ</h3>
+          </div>
+          <span class="selected-crop-label">選択中：${selectedCrop.name}</span>
         </div>
-        <button type="button" data-field-buy="${crop.id}">1個買う</button>
-      </div>
+        ${renderCropShop(saveData, selectedCrop.id, now)}
+      </section>
 
       <div class="field-toolbar" aria-label="畑の作業">
         ${toolButtons}
@@ -171,18 +219,17 @@ export function renderFieldScreen({
 
       <div class="field-guide">
         <p class="field-notice" role="status">
-          ${fieldNotice || "タネを買い、畑を耕してから種まきしてください。"}
+          ${fieldNotice || "育てる野菜を選び、タネを買ってから畑を耕して種まきしてください。"}
         </p>
         <p class="gentle-note">
-          野菜は現実時間で自動的に育ちます。
-          水やり1回でさらに${formatGrowthTime(crop.manualGrowthMs)}分だけ成長が進みます。
-          長く離れていても枯れません。
+          ${selectedCrop.name}は現実時間${formatGrowthTime(selectedCrop.growMs)}で育ちます。
+          水やり1回でさらに${formatGrowthTime(selectedCrop.manualGrowthMs)}分だけ成長が進みます。
+          季節外でも栽培でき、長く離れていても枯れません。
         </p>
       </div>
     </section>
   `;
 }
-
 export function applyFieldAction(
   saveData,
   {
