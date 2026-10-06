@@ -60,7 +60,7 @@ function renderCourses(saveData) {
     return `
       <article class="lab-action-card${isCompleted ? " is-complete" : ""}">
         <div>
-          <p class="lab-action-kind">一度だけ</p>
+          <p class="lab-action-kind">何度でも</p>
           <h4>${course.title}</h4>
           <p>${course.description}</p>
         </div>
@@ -69,8 +69,7 @@ function renderCourses(saveData) {
           <button
             type="button"
             data-lab-course="${course.id}"
-            ${isCompleted ? "disabled" : ""}
-          >${isCompleted ? "受講済み" : "受講する"}</button>
+          >${isCompleted ? "もう一度受講" : "受講する"}</button>
         </div>
       </article>
     `;
@@ -113,8 +112,8 @@ export function renderLabScreen({ saveData, labNotice = "" } = {}) {
         <p class="scene-kicker">研究所</p>
         <h2 id="lab-title">知識を野菜の力に</h2>
         <p>
-          講座は一度だけ受講でき、図書室は何度でも利用できます。
-          どちらも野菜の研究補正を少しずつ高めます。
+          講座も図書室も何度でも利用できます。
+          どちらも利用するたびに野菜の研究補正を少しずつ高めます。
         </p>
         <div class="lab-quality-grid" aria-label="現在の品質">
           <span>品質 <strong>${quality.levelName}</strong></span>
@@ -123,7 +122,7 @@ export function renderLabScreen({ saveData, labNotice = "" } = {}) {
           <span>出荷 <strong>+${shipmentBonusPercent}%</strong></span>
         </div>
         <p class="lab-progress-note">
-          受講 ${completedCount}/${RESEARCH_COURSES.length}・図書室 ${studyCount}回
+          初回受講 ${completedCount}/${RESEARCH_COURSES.length}・図書室 ${studyCount}回
         </p>
       </div>
 
@@ -132,7 +131,7 @@ export function renderLabScreen({ saveData, labNotice = "" } = {}) {
       <section class="lab-section" aria-labelledby="lab-course-title">
         <div class="lab-section-heading">
           <p class="scene-kicker">講座</p>
-          <h3 id="lab-course-title">一度だけ受講する</h3>
+          <h3 id="lab-course-title">好きなだけ受講する</h3>
         </div>
         <div class="lab-action-list">
           ${renderCourses(saveData)}

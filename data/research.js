@@ -153,11 +153,10 @@ export function applyResearchAction(
       return { changed: false, message: "その講座はまだ開講されていません。" };
     }
 
-    if (saveData.research.completedCourses.includes(course.id)) {
-      return { changed: false, message: `${course.title}は受講済みです。` };
+    if (!saveData.research.completedCourses.includes(course.id)) {
+      saveData.research.completedCourses.push(course.id);
     }
 
-    saveData.research.completedCourses.push(course.id);
     saveData.quality.researchBonus = roundBonus(
       saveData.quality.researchBonus + course.bonus
     );
