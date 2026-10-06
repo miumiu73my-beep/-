@@ -169,8 +169,8 @@ function refreshTimeDrivenScreen() {
     return;
   }
 
-  if (activeScreen === "field") {
-    renderScreen("field", { syncHash: false });
+  if (activeScreen === "field" || activeScreen === "lab") {
+    renderScreen(activeScreen, { syncHash: false });
   }
 }
 
