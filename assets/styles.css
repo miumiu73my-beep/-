@@ -163,7 +163,7 @@ button {
 
 .plot-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(var(--field-columns, 3), minmax(0, 1fr));
   gap: 9px;
   aspect-ratio: 1;
 }
@@ -741,5 +741,98 @@ button {
   .crop-shop-heading {
     align-items: flex-start;
     flex-direction: column;
+  }
+}
+
+
+/* STEP 7: 畑拡張・経済システム */
+.field-expansion-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: center;
+  padding: 16px 18px;
+  border: 1px solid rgba(15, 107, 85, 0.14);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: var(--shadow);
+}
+
+.field-expansion-card h3 {
+  margin: 4px 0 6px;
+  font-size: 1rem;
+}
+
+.field-expansion-card p:not(.scene-kicker) {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.55;
+}
+
+.field-expansion-actions {
+  display: grid;
+  justify-items: end;
+  gap: 7px;
+}
+
+.field-expansion-actions button {
+  min-height: 40px;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--green-700);
+  color: white;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.field-expansion-status {
+  color: var(--green-700);
+  font-size: 0.75rem;
+  font-weight: 900;
+}
+
+.field-expansion-status.is-short {
+  color: #8a5a18;
+}
+
+.field-expansion-card.is-max {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+@media (max-width: 430px) {
+  .field-expansion-card {
+    grid-template-columns: 1fr;
+  }
+
+  .field-expansion-actions {
+    justify-items: stretch;
+  }
+
+  .field-expansion-actions button,
+  .field-expansion-status {
+    text-align: center;
+  }
+
+  .field-expansion-card.is-max {
+    grid-template-columns: 1fr;
+  }
+
+  .plot-grid {
+    gap: 5px;
+  }
+
+  .plot-cell {
+    padding: 5px 2px;
+    border-radius: 10px;
+  }
+
+  .plot-cell .plot-title {
+    font-size: 0.66rem;
+  }
+
+  .plot-cell .plot-detail {
+    font-size: 0.54rem;
   }
 }
