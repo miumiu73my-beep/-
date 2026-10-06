@@ -1,5 +1,10 @@
 import { SCREEN_META } from "./data/app-data.js";
-import { CHARACTER_KEYS, getCharacter } from "./data/characters.js";
+import {
+  CHARACTER_KEYS,
+  getCharacter,
+  getFavoriteCharacter,
+} from "./data/characters.js";
+import { getDateChoice, getDateEvent } from "./data/dates.js";
 import {
   hasCompletedNameSetup,
   NAME_MODES,
@@ -45,6 +50,7 @@ let fieldTool = "till";
 let fieldCropId = DEFAULT_CROP_ID;
 let fieldNotice = "育てる野菜を選び、タネを買ってから畑を耕して種まきしてください。";
 let labNotice = "研究所の利用は任意です。気になる講座や本から、好きな時に進めてください。";
+let dateSession = null;
 
 function normalizeScreen(value) {
   return Object.hasOwn(renderers, value) ? value : "field";
@@ -62,6 +68,7 @@ function buildRenderContext() {
     fieldCropId,
     fieldNotice,
     labNotice,
+    dateSession,
   };
 }
 
@@ -139,8 +146,17 @@ function persistGameState(savedAt = getCurrentDateTime()) {
 }
 
 function refreshTimeDrivenScreen() {
-  if (activeScreen === "home" || activeScreen === "field") {
-    renderScreen(activeScreen, { syncHash: false });
+  if (activeScreen === "home") {
+    const now = getCurrentDateTime();
+    if (!getTimeSnapshot(now).isWeekend) {
+      dateSession = null;
+    }
+    renderScreen("home", { syncHash: false });
+    return;
+  }
+
+  if (activeScreen === "field") {
+    renderScreen("field", { syncHash: false });
   }
 }
 
@@ -159,7 +175,6 @@ function runFieldAction(action, options = {}) {
 
   renderScreen("field", { syncHash: false });
 }
-
 
 function syncNameSetupOverlay() {
   if (!nameSetupRoot || !gameState) return;
@@ -218,10 +233,73 @@ function handleCharacterInteraction(event) {
 
   if (gameState.player.favoriteCharacter !== character.key) {
     gameState.player.favoriteCharacter = character.key;
+
+    if (activeScreen === "home") {
+      dateSession = null;
+    }
+
     void persistGameState();
   }
 
   renderScreen(activeScreen, { syncHash: false });
+}
+
+function handleHomeInteraction(event) {
+  if (activeScreen !== "home" || !gameState) return;
+
+  const now = getCurrentDateTime();
+  const isWeekend = getTimeSnapshot(now).isWeekend;
+
+  if (!isWeekend) {
+    if (dateSession) {
+      dateSession = null;
+      renderScreen("home", { syncHash: false });
+    }
+    return;
+  }
+
+  const startButton = event.target.closest("[data-date-start]");
+  if (startButton) {
+    const character = getFavoriteCharacter(gameState);
+    const requestedCharacter = startButton.dataset.dateCharacter;
+    const dateEvent = getDateEvent(character.key, startButton.dataset.dateStart);
+
+    if (requestedCharacter !== character.key || !dateEvent) return;
+
+    dateSession = {
+      characterKey: character.key,
+      eventId: dateEvent.id,
+      choiceId: null,
+    };
+    renderScreen("home", { syncHash: false });
+    return;
+  }
+
+  const choiceButton = event.target.closest("[data-date-choice]");
+  if (choiceButton && dateSession) {
+    const dateEvent = getDateEvent(
+      dateSession.characterKey,
+      dateSession.eventId
+    );
+    const choice = getDateChoice(dateEvent, choiceButton.dataset.dateChoice);
+
+    if (!dateEvent || !choice) return;
+
+    dateSession = {
+      ...dateSession,
+      choiceId: choice.id,
+    };
+    renderScreen("home", { syncHash: false });
+    return;
+  }
+
+  const backButton = event.target.closest("[data-date-back]");
+  const endButton = event.target.closest("[data-date-end]");
+
+  if ((backButton || endButton) && dateSession) {
+    dateSession = null;
+    renderScreen("home", { syncHash: false });
+  }
 }
 
 function handleFieldInteraction(event) {
@@ -344,6 +422,7 @@ async function bootstrap() {
   }
 
   screenRoot.addEventListener("click", handleCharacterInteraction);
+  screenRoot.addEventListener("click", handleHomeInteraction);
   screenRoot.addEventListener("click", handleFieldInteraction);
   screenRoot.addEventListener("click", handleLabInteraction);
 
