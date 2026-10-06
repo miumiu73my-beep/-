@@ -16,14 +16,14 @@ export const FIELD_EXPANSION_LEVELS = Object.freeze(
       label: "ひろがる畑",
       rows: 4,
       columns: 4,
-      price: 1200,
+      price: 1400,
     },
     {
       level: 2,
       label: "大きな畑",
       rows: 5,
       columns: 5,
-      price: 3600,
+      price: 4200,
     },
   ].map((level) => Object.freeze(level))
 );
