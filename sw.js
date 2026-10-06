@@ -1,4 +1,4 @@
-const CACHE_NAME = "yasai-seijo-step11-v1";
+const CACHE_NAME = "yasai-seijo-step13-v1";
 
 const APP_SHELL = [
   "./",
@@ -7,7 +7,7 @@ const APP_SHELL = [
   "./manifest.webmanifest",
   "./assets/styles.css",
   "./assets/step10.css",
-  "./assets/step11.css",
+  "./assets/step11.css",\n  "./assets/step13.css",
   "./assets/backgrounds/lab.svg",
   "./assets/backgrounds/field.svg",
   "./assets/backgrounds/home.svg",
