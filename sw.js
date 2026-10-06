@@ -1,4 +1,4 @@
-const CACHE_NAME = "yasai-seijo-step9-v2";
+const CACHE_NAME = "yasai-seijo-step10-v1";
 
 const APP_SHELL = [
   "./",
@@ -6,10 +6,23 @@ const APP_SHELL = [
   "./app.js",
   "./manifest.webmanifest",
   "./assets/styles.css",
+  "./assets/step10.css",
+  "./assets/backgrounds/lab.svg",
+  "./assets/backgrounds/field.svg",
+  "./assets/backgrounds/home.svg",
+  "./assets/characters/portraits/ichika.svg",
+  "./assets/characters/portraits/chihaya.svg",
+  "./assets/characters/portraits/uryu.svg",
+  "./assets/characters/portraits/shuka.svg",
+  "./assets/characters/chibi/ichika.svg",
+  "./assets/characters/chibi/chihaya.svg",
+  "./assets/characters/chibi/uryu.svg",
+  "./assets/characters/chibi/shuka.svg",
   "./assets/icons/icon-180.png",
   "./assets/icons/icon-192.png",
   "./assets/icons/icon-512.png",
   "./data/app-data.js",
+  "./data/characters.js",
   "./data/crops.js",
   "./data/economy.js",
   "./data/quality.js",
@@ -17,6 +30,7 @@ const APP_SHELL = [
   "./data/time.js",
   "./save/schema.js",
   "./save/storage.js",
+  "./screens/characters.js",
   "./screens/lab.js",
   "./screens/field.js",
   "./screens/home.js"
@@ -33,9 +47,7 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
       Promise.all(
-        keys
-          .filter((key) => key !== CACHE_NAME)
-          .map((key) => caches.delete(key))
+        keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
       )
     )
   );

@@ -1,4 +1,5 @@
 import { SCREEN_META } from "./data/app-data.js";
+import { getCharacter } from "./data/characters.js";
 import { DEFAULT_CROP_ID, getCrop } from "./data/crops.js";
 import { applyResearchAction } from "./data/research.js";
 import {
@@ -14,6 +15,10 @@ import {
   renderFieldScreen,
 } from "./screens/field.js";
 import { renderHomeScreen } from "./screens/home.js";
+import {
+  renderCharacterStage,
+  renderFieldWalkers,
+} from "./screens/characters.js";
 
 const screenRoot = document.querySelector("#screen-root");
 const screenCaption = document.querySelector("#screen-caption");
@@ -53,11 +58,48 @@ function buildRenderContext() {
   };
 }
 
+function activateCharacterAssets() {
+  for (const image of screenRoot.querySelectorAll("[data-character-asset]")) {
+    const wrapper = image.closest("[data-character-art]");
+    if (!wrapper) continue;
+
+    const sync = () => {
+      const available = image.complete && image.naturalWidth > 0;
+      wrapper.classList.toggle("has-image", available);
+    };
+
+    image.addEventListener("load", sync, { once: true });
+    image.addEventListener("error", sync, { once: true });
+
+    if (image.complete) sync();
+  }
+}
+
+function decorateCharacterSystem(screenKey) {
+  const scene = screenRoot.querySelector(".scene");
+  if (!scene) return;
+
+  scene.insertAdjacentHTML(
+    "afterbegin",
+    renderCharacterStage(gameState, screenKey)
+  );
+
+  if (screenKey === "field") {
+    const plotWrap = scene.querySelector(".plot-wrap");
+    if (plotWrap) {
+      plotWrap.insertAdjacentHTML("beforeend", renderFieldWalkers());
+    }
+  }
+
+  activateCharacterAssets();
+}
+
 function renderScreen(screenKey, { syncHash = true } = {}) {
   const nextScreen = normalizeScreen(screenKey);
   activeScreen = nextScreen;
 
   screenRoot.innerHTML = renderers[nextScreen](buildRenderContext());
+  decorateCharacterSystem(nextScreen);
   screenRoot.dataset.screen = nextScreen;
   screenCaption.textContent = SCREEN_META[nextScreen].label;
 
@@ -109,6 +151,23 @@ function runFieldAction(action, options = {}) {
   }
 
   renderScreen("field", { syncHash: false });
+}
+
+function handleCharacterInteraction(event) {
+  const button = event.target.closest("[data-character-select]");
+  if (!button || !activeScreen || !gameState) return;
+
+  const character = getCharacter(button.dataset.characterSelect);
+  if (!character) return;
+
+  gameState.player ??= {};
+
+  if (gameState.player.favoriteCharacter !== character.key) {
+    gameState.player.favoriteCharacter = character.key;
+    void persistGameState();
+  }
+
+  renderScreen(activeScreen, { syncHash: false });
 }
 
 function handleFieldInteraction(event) {
@@ -228,6 +287,7 @@ async function bootstrap() {
     });
   }
 
+  screenRoot.addEventListener("click", handleCharacterInteraction);
   screenRoot.addEventListener("click", handleFieldInteraction);
   screenRoot.addEventListener("click", handleLabInteraction);
 
