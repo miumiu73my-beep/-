@@ -1,5 +1,5 @@
 const CACHE_PREFIX = "yasai-seijo-";
-const CACHE_VERSION = "step18-v1";
+const CACHE_VERSION = "step12-v1";
 const PRECACHE_NAME = `${CACHE_PREFIX}precache-${CACHE_VERSION}`;
 const RUNTIME_CACHE_NAME = `${CACHE_PREFIX}runtime-${CACHE_VERSION}`;
 
@@ -30,6 +30,8 @@ const APP_SHELL = [
   "./assets/icons/icon-512.png",
   "./data/app-data.js",
   "./data/characters.js",
+  "./data/dialogues.js",
+  "./data/dialogue-engine.js",
   "./data/dates.js",
   "./data/names.js",
   "./data/crops.js",
