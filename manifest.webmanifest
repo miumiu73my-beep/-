@@ -1,4 +1,5 @@
 {
+  "id": "./",
   "name": "野菜聖女",
   "short_name": "野菜聖女",
   "description": "現実時間でゆるく遊ぶ異世界野菜育成ゲーム",
@@ -6,9 +7,11 @@
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
+  "display_override": ["standalone"],
   "orientation": "portrait-primary",
   "background_color": "#f7f7eb",
   "theme_color": "#0f6b55",
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "./assets/icons/icon-180.png",

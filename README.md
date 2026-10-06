@@ -230,6 +230,20 @@ STEP 4のMVPで仮設定していた「かぶ24時間」は、STEP 6から原型
 
 通常利用では手動セーブを意識する必要はありません。端末移行・念のための保管・復旧時だけJSONバックアップを使う想定です。
 
+### STEP 17｜PWA・オフライン対応
+
+- `manifest.webmanifest` にアプリID・起動URL・scope・`display: standalone`・縦画面向け設定を明示
+- 既存の180 / 192 / 512系アプリアイコンをPWAとiPhone / iPadのホーム画面用アイコンとして利用
+- HTML・CSS・JavaScript・Web App Manifest・背景画像・キャラクター画像・アイコンをService Workerのアプリシェルとして事前キャッシュ
+- 将来追加されるJSON・画像・Webフォント等も、同一アプリscope内で実際に読み込まれたものはランタイムキャッシュできる構成
+- 画面遷移（navigation）はネットワーク優先にし、通信できない場合は保存済みの`index.html`へフォールバック
+- IndexedDBのセーブデータは通信なしでも従来どおり読み込めるため、オフライン時も保存済み状態から基本プレイ可能
+- キャッシュ名を`yasai-seijo-*`に限定して世代管理し、更新時は「野菜聖女」の古いキャッシュだけを削除
+- 同一GitHub Pagesドメイン上にある別PWAのCache Storageを誤って削除しないように修正
+- STEP 12（汎用台詞エンジン）とSTEP 15（本番ビジュアル素材）は未実装のまま維持
+
+Service Workerのキャッシュ世代は`step17-v1`です。新しい版を公開する際はキャッシュ世代を更新することで、古いアプリシェルが残り続けないようにします。
+
 ## 起動
 
 GitHub Pagesへデプロイ後、iPhone / iPadのSafariで開き、

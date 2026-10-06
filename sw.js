@@ -1,4 +1,7 @@
-const CACHE_NAME = "yasai-seijo-step16-v1";
+const CACHE_PREFIX = "yasai-seijo-";
+const CACHE_VERSION = "step17-v1";
+const PRECACHE_NAME = `${CACHE_PREFIX}precache-${CACHE_VERSION}`;
+const RUNTIME_CACHE_NAME = `${CACHE_PREFIX}runtime-${CACHE_VERSION}`;
 
 const APP_SHELL = [
   "./",
@@ -44,36 +47,108 @@ const APP_SHELL = [
   "./screens/save-management.js"
 ];
 
+const STATIC_ASSET_PATTERN =
+  /\.(?:html|css|js|json|webmanifest|png|jpe?g|webp|svg|gif|avif|woff2?)$/i;
+
+function scopeUrl(path) {
+  return new URL(path, self.registration.scope).href;
+}
+
+function isAppRequest(request) {
+  const url = new URL(request.url);
+
+  return (
+    url.origin === self.location.origin &&
+    url.href.startsWith(self.registration.scope)
+  );
+}
+
+function canRuntimeCache(request) {
+  if (request.headers.has("range")) return false;
+
+  const url = new URL(request.url);
+  return STATIC_ASSET_PATTERN.test(url.pathname);
+}
+
+async function cacheResponse(cacheName, request, response) {
+  if (!response || !response.ok) return;
+
+  const cache = await caches.open(cacheName);
+  await cache.put(request, response.clone());
+}
+
+async function handleNavigation(request) {
+  try {
+    const response = await fetch(request);
+    await cacheResponse(RUNTIME_CACHE_NAME, request, response);
+    return response;
+  } catch (error) {
+    const cachedPage = await caches.match(request, { ignoreSearch: true });
+
+    if (cachedPage) return cachedPage;
+
+    const cachedIndex = await caches.match(scopeUrl("./index.html"));
+    if (cachedIndex) return cachedIndex;
+
+    const cachedRoot = await caches.match(scopeUrl("./"));
+    if (cachedRoot) return cachedRoot;
+
+    throw error;
+  }
+}
+
+async function handleStaticRequest(request) {
+  const cached = await caches.match(request);
+
+  if (cached) return cached;
+
+  const response = await fetch(request);
+
+  if (canRuntimeCache(request)) {
+    await cacheResponse(RUNTIME_CACHE_NAME, request, response);
+  }
+
+  return response;
+}
+
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL))
+    caches
+      .open(PRECACHE_NAME)
+      .then((cache) => cache.addAll(APP_SHELL.map(scopeUrl)))
   );
+
   self.skipWaiting();
 });
 
 self.addEventListener("activate", (event) => {
+  const keepCaches = new Set([PRECACHE_NAME, RUNTIME_CACHE_NAME]);
+
   event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(
-        keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
+    caches
+      .keys()
+      .then((keys) =>
+        Promise.all(
+          keys
+            .filter(
+              (key) => key.startsWith(CACHE_PREFIX) && !keepCaches.has(key)
+            )
+            .map((key) => caches.delete(key))
+        )
       )
-    )
+      .then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
 
 self.addEventListener("fetch", (event) => {
-  if (event.request.method !== "GET") return;
+  const { request } = event;
 
-  event.respondWith(
-    caches.match(event.request).then((cached) => {
-      if (cached) return cached;
+  if (request.method !== "GET" || !isAppRequest(request)) return;
 
-      return fetch(event.request).then((response) => {
-        const copy = response.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
-        return response;
-      });
-    })
-  );
+  if (request.mode === "navigate") {
+    event.respondWith(handleNavigation(request));
+    return;
+  }
+
+  event.respondWith(handleStaticRequest(request));
 });
