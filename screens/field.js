@@ -317,8 +317,8 @@ export function renderFieldScreen({
         </p>
         <p class="gentle-note">
           ${selectedCrop.name}は現実時間${formatGrowthTime(selectedCrop.growMs)}で育ちます。
-          水やり1回でさらに${formatGrowthTime(selectedCrop.manualGrowthMs)}分だけ成長が進みます。
-          季節外でも栽培でき、長く離れていても枯れません。
+          植え付け後の水やりは1回だけでき、${formatGrowthTime(selectedCrop.manualGrowthMs)}分だけ成長が進みます。
+          その後は現実時間で育ち続け、季節外でも枯れません。
         </p>
       </div>
     </section>
@@ -439,6 +439,13 @@ export function applyFieldAction(
       return { changed: false, message: `${plantedCrop.name}はもう収穫できます。` };
     }
 
+    if (plot.watered) {
+      return {
+        changed: false,
+        message: `${plantedCrop.name}には水やり済みです。あとは現実時間でゆっくり育ちます。`,
+      };
+    }
+
     plot.watered = true;
     plot.growthMs = Math.min(
       plantedCrop.growMs,
@@ -450,7 +457,7 @@ export function applyFieldAction(
       changed: true,
       message: ready
         ? `${plantedCrop.name}が育ちました。収穫できます。`
-        : `${plantedCrop.name}に水をやりました。成長 ${cropProgressPercent(plot, plantedCrop, now)}%`,
+        : `${plantedCrop.name}に水をやりました。成長 ${cropProgressPercent(plot, plantedCrop, now)}%（水やり完了）`,
     };
   }
 
