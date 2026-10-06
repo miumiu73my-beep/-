@@ -1,4 +1,4 @@
-const CACHE_NAME = "yasai-seijo-step10-v1";
+const CACHE_NAME = "yasai-seijo-step11-v1";
 
 const APP_SHELL = [
   "./",
@@ -7,6 +7,7 @@ const APP_SHELL = [
   "./manifest.webmanifest",
   "./assets/styles.css",
   "./assets/step10.css",
+  "./assets/step11.css",
   "./assets/backgrounds/lab.svg",
   "./assets/backgrounds/field.svg",
   "./assets/backgrounds/home.svg",
@@ -23,6 +24,7 @@ const APP_SHELL = [
   "./assets/icons/icon-512.png",
   "./data/app-data.js",
   "./data/characters.js",
+  "./data/names.js",
   "./data/crops.js",
   "./data/economy.js",
   "./data/quality.js",
@@ -33,7 +35,8 @@ const APP_SHELL = [
   "./screens/characters.js",
   "./screens/lab.js",
   "./screens/field.js",
-  "./screens/home.js"
+  "./screens/home.js",
+  "./screens/name-settings.js"
 ];
 
 self.addEventListener("install", (event) => {
