@@ -53,7 +53,7 @@ function defineCrop({
     growMs,
     seedPrice,
     sellPrice,
-    // STEP 8の品質計算で使う中立の基準値。現段階では全作物1.0。
+    // STEP 8の品質計算で使う作物側の係数。現在は全作物1.0の中立値。
     qualityBase,
     // STEP 5の「遊んだ分だけ少し進む」を作物ごとの成長時間に合わせる。
     // 3回の水やりで必要成長時間ぶんの補助になる暫定値で、STEP 18で調整可能。
