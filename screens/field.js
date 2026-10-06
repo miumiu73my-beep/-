@@ -7,6 +7,11 @@ import {
   getSeasonName,
   isCropInSeason,
 } from "../data/crops.js";
+import {
+  calculateCropShipment,
+  getNextFieldExpansion,
+  resolveFieldExpansionLevel,
+} from "../data/economy.js";
 
 export const FIELD_TOOLS = Object.freeze({
   till: Object.freeze({ key: "till", label: "耕す" }),
@@ -105,6 +110,49 @@ function ensureFieldData(saveData) {
   saveData.field.plots ??= [];
 }
 
+function createEmptyPlot(index) {
+  return {
+    id: index,
+    state: "empty",
+    cropId: null,
+    plantedAt: null,
+    watered: false,
+    growthMs: 0,
+  };
+}
+
+function expandPlots(field, nextLevel) {
+  const currentRows = Math.max(1, Number(field?.size?.rows) || 3);
+  const currentColumns = Math.max(1, Number(field?.size?.columns) || 3);
+  const currentPlots = Array.isArray(field?.plots) ? field.plots : [];
+  const expandedPlots = Array.from(
+    { length: nextLevel.rows * nextLevel.columns },
+    (_, index) => createEmptyPlot(index)
+  );
+
+  for (let row = 0; row < currentRows; row += 1) {
+    for (let column = 0; column < currentColumns; column += 1) {
+      const oldIndex = row * currentColumns + column;
+      const newIndex = row * nextLevel.columns + column;
+      const oldPlot = currentPlots[oldIndex];
+
+      if (oldPlot) {
+        expandedPlots[newIndex] = {
+          ...oldPlot,
+          id: newIndex,
+        };
+      }
+    }
+  }
+
+  field.level = nextLevel.level;
+  field.size = {
+    rows: nextLevel.rows,
+    columns: nextLevel.columns,
+  };
+  field.plots = expandedPlots;
+}
+
 function resetPlot(plot, state = "empty") {
   plot.state = state;
   plot.cropId = null;
@@ -128,6 +176,10 @@ function renderCropShop(saveData, selectedCropId, now) {
       const seedCount = Number(saveData?.inventory?.seeds?.[crop.id]) || 0;
       const selected = crop.id === selectedCropId;
       const inSeason = isCropInSeason(crop.id, now);
+      const shipment = calculateCropShipment(saveData, crop);
+      const shipmentText = shipment.qualityBonus > 0
+        ? `${moneyText(shipment.totalPrice)}（品質+${moneyText(shipment.qualityBonus)}）`
+        : moneyText(shipment.totalPrice);
 
       return `
         <article class="crop-card${selected ? " is-selected" : ""}">
@@ -143,7 +195,7 @@ function renderCropShop(saveData, selectedCropId, now) {
           </button>
           <div class="crop-data">
             <span>タネ ${moneyText(crop.seedPrice)}</span>
-            <span>出荷 ${moneyText(crop.sellPrice)}</span>
+            <span>出荷 ${shipmentText}</span>
             <span>成長 ${formatGrowthTime(crop.growMs)}</span>
             <span>所持 ${seedCount}個</span>
           </div>
@@ -154,6 +206,44 @@ function renderCropShop(saveData, selectedCropId, now) {
     .join("");
 
   return `<div class="crop-shop-grid">${cards}</div>`;
+}
+
+function renderFieldExpansion(saveData) {
+  const current = resolveFieldExpansionLevel(saveData?.field);
+  const next = getNextFieldExpansion(saveData?.field);
+  const money = Math.max(0, Number(saveData?.economy?.money) || 0);
+
+  if (!next) {
+    return `
+      <section class="field-expansion-card is-max" aria-label="畑拡張">
+        <div>
+          <p class="scene-kicker">畑拡張</p>
+          <h3>${current.rows}×${current.columns}・最大サイズ</h3>
+          <p>この畑は最大まで広がっています。</p>
+        </div>
+        <span class="field-expansion-status">拡張完了</span>
+      </section>
+    `;
+  }
+
+  const shortage = Math.max(0, next.price - money);
+  const statusText = shortage > 0
+    ? `所持金不足：あと${moneyText(shortage)}`
+    : "拡張できます";
+
+  return `
+    <section class="field-expansion-card" aria-labelledby="field-expansion-title">
+      <div>
+        <p class="scene-kicker">畑拡張</p>
+        <h3 id="field-expansion-title">${current.rows}×${current.columns} → ${next.rows}×${next.columns}</h3>
+        <p>野菜を出荷して貯めたお金で、畑を右と下へ広げられます。</p>
+      </div>
+      <div class="field-expansion-actions">
+        <span class="field-expansion-status${shortage > 0 ? " is-short" : ""}">${statusText}</span>
+        <button type="button" data-field-expand>${moneyText(next.price)}で拡張</button>
+      </div>
+    </section>
+  `;
 }
 
 export function renderFieldScreen({
@@ -169,6 +259,7 @@ export function renderFieldScreen({
   const money = Number(saveData?.economy?.money) || 0;
   const currentSeason = getSeasonForDate(now);
   const currentMonth = now.getMonth() + 1;
+  const columns = Math.max(1, Number(field?.size?.columns) || 3);
 
   const toolButtons = Object.values(FIELD_TOOLS)
     .map(
@@ -214,8 +305,10 @@ export function renderFieldScreen({
       </div>
 
       <div class="plot-wrap" aria-label="畑">
-        <div class="plot-grid">${plotButtons}</div>
+        <div class="plot-grid" style="--field-columns:${columns}">${plotButtons}</div>
       </div>
+
+      ${renderFieldExpansion(saveData)}
 
       <div class="field-guide">
         <p class="field-notice" role="status">
@@ -259,6 +352,30 @@ export function applyFieldAction(
     return {
       changed: true,
       message: `${crop.name}のタネを1個買いました。-${moneyText(crop.seedPrice)}`,
+    };
+  }
+
+  if (action === "expand") {
+    const nextLevel = getNextFieldExpansion(saveData.field);
+
+    if (!nextLevel) {
+      return { changed: false, message: "畑はすでに最大まで広がっています。" };
+    }
+
+    if (saveData.economy.money < nextLevel.price) {
+      const shortage = nextLevel.price - saveData.economy.money;
+      return {
+        changed: false,
+        message: `畑を広げるには所持金が足りません。あと${moneyText(shortage)}必要です。`,
+      };
+    }
+
+    saveData.economy.money -= nextLevel.price;
+    expandPlots(saveData.field, nextLevel);
+
+    return {
+      changed: true,
+      message: `畑を${nextLevel.rows}×${nextLevel.columns}へ広げました。-${moneyText(nextLevel.price)}`,
     };
   }
 
@@ -348,12 +465,17 @@ export function applyFieldAction(
       };
     }
 
-    saveData.economy.money += plantedCrop.sellPrice;
+    const shipment = calculateCropShipment(saveData, plantedCrop);
+    saveData.economy.money += shipment.totalPrice;
     resetPlot(plot, "tilled");
+
+    const qualityText = shipment.qualityBonus > 0
+      ? `（基礎${moneyText(shipment.basePrice)} + 品質${moneyText(shipment.qualityBonus)}）`
+      : "";
 
     return {
       changed: true,
-      message: `${plantedCrop.name}を収穫して出荷しました。+${moneyText(plantedCrop.sellPrice)}`,
+      message: `${plantedCrop.name}を収穫して出荷しました。+${moneyText(shipment.totalPrice)}${qualityText}`,
     };
   }
 
