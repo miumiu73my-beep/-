@@ -1,33 +1,161 @@
 import {
+  LAB_CHARACTERS,
+  LIBRARY_TOPICS,
+  RESEARCH_COURSES,
+  countStudySessions,
+  getCompletedCourseIds,
+  getLabCharacter,
+} from "../data/research.js";
+import {
   calculateGeneralQuality,
   formatQualityScore,
 } from "../data/quality.js";
 
-export function renderLabScreen({ saveData } = {}) {
+function renderCharacterPanel(saveData) {
+  const selectedKey = saveData?.player?.favoriteCharacter ?? null;
+  const selected = getLabCharacter(selectedKey);
+  const buttons = Object.values(LAB_CHARACTERS)
+    .map((character) => {
+      const active = character.key === selectedKey;
+
+      return `
+        <button
+          class="lab-character-button${active ? " is-selected" : ""}"
+          type="button"
+          data-lab-character="${character.key}"
+          aria-pressed="${active ? "true" : "false"}"
+        >
+          <span aria-hidden="true">${character.mark}</span>
+          ${character.name}
+        </button>
+      `;
+    })
+    .join("");
+
+  return `
+    <section class="lab-character-card" aria-labelledby="lab-character-title">
+      <div class="lab-character-display" aria-hidden="true">
+        <span>${selected?.mark ?? "✦"}</span>
+      </div>
+      <div class="lab-character-copy">
+        <p class="scene-kicker">固定キャラ</p>
+        <h3 id="lab-character-title">${selected ? selected.name : "研究相棒を選ぶ"}</h3>
+        <p class="lab-dialogue">
+          ${selected?.dialogue ?? "4人のうち、研究所に一緒にいてほしい相手を選べます。"}
+        </p>
+      </div>
+      <div class="lab-character-selector" aria-label="研究所の固定キャラ">
+        ${buttons}
+      </div>
+    </section>
+  `;
+}
+
+function renderCourses(saveData) {
+  const completed = getCompletedCourseIds(saveData);
+
+  return RESEARCH_COURSES.map((course) => {
+    const isCompleted = completed.has(course.id);
+
+    return `
+      <article class="lab-action-card${isCompleted ? " is-complete" : ""}">
+        <div>
+          <p class="lab-action-kind">一度だけ</p>
+          <h4>${course.title}</h4>
+          <p>${course.description}</p>
+        </div>
+        <div class="lab-action-meta">
+          <span>研究 +${formatQualityScore(course.bonus)}</span>
+          <button
+            type="button"
+            data-lab-course="${course.id}"
+            ${isCompleted ? "disabled" : ""}
+          >${isCompleted ? "受講済み" : "受講する"}</button>
+        </div>
+      </article>
+    `;
+  }).join("");
+}
+
+function renderLibrary(saveData) {
+  return LIBRARY_TOPICS.map((topic) => {
+    const count = countStudySessions(saveData, topic.id);
+
+    return `
+      <article class="lab-action-card">
+        <div>
+          <p class="lab-action-kind">何度でも</p>
+          <h4>${topic.title}</h4>
+          <p>${topic.description}</p>
+        </div>
+        <div class="lab-action-meta">
+          <span>研究 +${formatQualityScore(topic.bonus)}${count > 0 ? `・${count}回` : ""}</span>
+          <button type="button" data-lab-study="${topic.id}">勉強する</button>
+        </div>
+      </article>
+    `;
+  }).join("");
+}
+
+export function renderLabScreen({ saveData, labNotice = "" } = {}) {
   const quality = calculateGeneralQuality(saveData);
   const shipmentBonusPercent = Math.round(quality.bonusRate * 100);
+  const completedCount = getCompletedCourseIds(saveData).size;
+  const studyCount = countStudySessions(saveData);
 
   return `
     <section class="scene scene-lab" aria-labelledby="lab-title">
-      <div class="scene-visual" aria-hidden="true">
+      <div class="scene-visual lab-visual" aria-hidden="true">
         <span class="scene-symbol">⌘</span>
       </div>
+
       <div class="scene-card">
         <p class="scene-kicker">研究所</p>
         <h2 id="lab-title">知識を野菜の力に</h2>
         <p>
-          STEP 8で野菜の品質システムが有効になりました。
-          研究所の講座・図書室で品質補正を増やす操作はSTEP 9で追加します。
+          講座は一度だけ受講でき、図書室は何度でも利用できます。
+          どちらも野菜の研究補正を少しずつ高めます。
         </p>
-        <div class="placeholder-row" aria-label="現在の品質">
-          <span>品質 ${quality.levelName}</span>
-          <span>基礎 ${formatQualityScore(quality.base)}</span>
-          <span>研究 +${formatQualityScore(quality.researchBonus)}</span>
-          <span>出荷 +${shipmentBonusPercent}%</span>
+        <div class="lab-quality-grid" aria-label="現在の品質">
+          <span>品質 <strong>${quality.levelName}</strong></span>
+          <span>基礎 <strong>${formatQualityScore(quality.base)}</strong></span>
+          <span>研究 <strong>+${formatQualityScore(quality.researchBonus)}</strong></span>
+          <span>出荷 <strong>+${shipmentBonusPercent}%</strong></span>
         </div>
+        <p class="lab-progress-note">
+          受講 ${completedCount}/${RESEARCH_COURSES.length}・図書室 ${studyCount}回
+        </p>
+      </div>
+
+      ${renderCharacterPanel(saveData)}
+
+      <section class="lab-section" aria-labelledby="lab-course-title">
+        <div class="lab-section-heading">
+          <p class="scene-kicker">講座</p>
+          <h3 id="lab-course-title">一度だけ受講する</h3>
+        </div>
+        <div class="lab-action-list">
+          ${renderCourses(saveData)}
+        </div>
+      </section>
+
+      <section class="lab-section" aria-labelledby="lab-library-title">
+        <div class="lab-section-heading">
+          <p class="scene-kicker">図書室</p>
+          <h3 id="lab-library-title">好きなだけ勉強する</h3>
+        </div>
+        <div class="lab-action-list">
+          ${renderLibrary(saveData)}
+        </div>
+      </section>
+
+      <div class="field-guide">
+        <p class="field-notice" role="status">
+          ${labNotice || "研究所の利用は任意です。気になる講座や本から、好きな時に進めてください。"}
+        </p>
         <p class="gentle-note">
-          研究補正は品質を少し有利にするための加点だけです。
-          勉強をしなくても野菜は通常どおり育ち、収穫・出荷できます。
+          研究所を使わなくても野菜は育ち、収穫・出荷できます。
+          好感度・ログイン頻度・デート回数は品質計算に入りません。
         </p>
       </div>
     </section>

@@ -836,3 +836,219 @@ button {
     font-size: 0.54rem;
   }
 }
+
+
+/* STEP 9: 研究所 */
+.lab-visual {
+  min-height: 150px;
+}
+
+.lab-quality-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.lab-quality-grid span {
+  min-width: 0;
+  padding: 10px 6px;
+  border-radius: 14px;
+  background: var(--green-100);
+  color: var(--green-900);
+  font-size: 0.74rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.lab-quality-grid strong {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.9rem;
+}
+
+.scene-card .lab-progress-note {
+  margin-top: 10px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-align: right;
+}
+
+.lab-character-card,
+.lab-section {
+  padding: 18px;
+  border: 1px solid rgba(15, 107, 85, 0.14);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: var(--shadow);
+}
+
+.lab-character-card {
+  display: grid;
+  grid-template-columns: 78px minmax(0, 1fr);
+  gap: 14px;
+  align-items: center;
+}
+
+.lab-character-display {
+  width: 78px;
+  aspect-ratio: 1;
+  border-radius: 22px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(145deg, var(--green-700), #5b9c7e);
+  color: white;
+  font-size: 2rem;
+  font-weight: 900;
+}
+
+.lab-character-copy {
+  min-width: 0;
+}
+
+.lab-character-copy h3,
+.lab-section-heading h3,
+.lab-action-card h4 {
+  margin: 4px 0 0;
+}
+
+.lab-character-copy h3,
+.lab-section-heading h3 {
+  font-size: 1.05rem;
+}
+
+.lab-character-copy .lab-dialogue {
+  margin-top: 6px;
+  color: #455f56;
+  font-size: 0.88rem;
+  line-height: 1.65;
+}
+
+.lab-character-selector {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.lab-character-button {
+  min-height: 44px;
+  border: 0;
+  border-radius: 13px;
+  display: grid;
+  grid-template-columns: auto auto;
+  place-content: center;
+  gap: 5px;
+  background: var(--green-100);
+  color: var(--green-900);
+  font-size: 0.78rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.lab-character-button span {
+  font-size: 0.7rem;
+  opacity: 0.7;
+}
+
+.lab-character-button.is-selected {
+  background: var(--green-700);
+  color: white;
+  box-shadow: 0 5px 14px rgba(15, 107, 85, 0.2);
+}
+
+.lab-section {
+  display: grid;
+  gap: 12px;
+}
+
+.lab-action-list {
+  display: grid;
+  gap: 9px;
+}
+
+.lab-action-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  padding: 13px 14px;
+  border: 1px solid rgba(15, 107, 85, 0.1);
+  border-radius: 17px;
+  background: rgba(247, 247, 235, 0.72);
+}
+
+.lab-action-card.is-complete {
+  background: rgba(220, 239, 227, 0.72);
+}
+
+.lab-action-card h4 {
+  color: var(--ink);
+  font-size: 0.94rem;
+}
+
+.lab-action-card p:not(.lab-action-kind) {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 0.76rem;
+  line-height: 1.5;
+}
+
+.lab-action-card .lab-action-kind {
+  margin: 0;
+  color: var(--green-700);
+  font-size: 0.68rem;
+  font-weight: 900;
+}
+
+.lab-action-meta {
+  min-width: 92px;
+  display: grid;
+  justify-items: stretch;
+  gap: 6px;
+}
+
+.lab-action-meta span {
+  color: var(--green-700);
+  font-size: 0.7rem;
+  font-weight: 900;
+  text-align: center;
+}
+
+.lab-action-meta button {
+  min-height: 38px;
+  padding: 7px 10px;
+  border: 0;
+  border-radius: 11px;
+  background: var(--green-700);
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.lab-action-meta button:disabled {
+  background: #c8d8d1;
+  color: #587068;
+  cursor: default;
+}
+
+@media (max-width: 430px) {
+  .lab-quality-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .lab-character-selector {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .lab-action-card {
+    grid-template-columns: 1fr;
+  }
+
+  .lab-action-meta {
+    grid-template-columns: auto minmax(110px, 0.7fr);
+    align-items: center;
+  }
+}

@@ -1,5 +1,6 @@
 import { SCREEN_META } from "./data/app-data.js";
 import { DEFAULT_CROP_ID, getCrop } from "./data/crops.js";
+import { applyResearchAction } from "./data/research.js";
 import {
   getCurrentDateTime,
   getElapsedMilliseconds,
@@ -31,6 +32,7 @@ let savePromise = Promise.resolve();
 let fieldTool = "till";
 let fieldCropId = DEFAULT_CROP_ID;
 let fieldNotice = "育てる野菜を選び、タネを買ってから畑を耕して種まきしてください。";
+let labNotice = "研究所の利用は任意です。気になる講座や本から、好きな時に進めてください。";
 
 function normalizeScreen(value) {
   return Object.hasOwn(renderers, value) ? value : "field";
@@ -47,6 +49,7 @@ function buildRenderContext() {
     fieldTool,
     fieldCropId,
     fieldNotice,
+    labNotice,
   };
 }
 
@@ -163,6 +166,43 @@ function handleFieldInteraction(event) {
   }
 }
 
+function runLabAction(action, id) {
+  const result = applyResearchAction(gameState, {
+    action,
+    id,
+    now: getCurrentDateTime(),
+  });
+
+  labNotice = result.message;
+
+  if (result.changed) {
+    void persistGameState();
+  }
+
+  renderScreen("lab", { syncHash: false });
+}
+
+function handleLabInteraction(event) {
+  if (activeScreen !== "lab") return;
+
+  const courseButton = event.target.closest("[data-lab-course]");
+  if (courseButton) {
+    runLabAction("course", courseButton.dataset.labCourse);
+    return;
+  }
+
+  const studyButton = event.target.closest("[data-lab-study]");
+  if (studyButton) {
+    runLabAction("study", studyButton.dataset.labStudy);
+    return;
+  }
+
+  const characterButton = event.target.closest("[data-lab-character]");
+  if (characterButton) {
+    runLabAction("character", characterButton.dataset.labCharacter);
+  }
+}
+
 async function bootstrap() {
   const bootTime = getCurrentDateTime();
 
@@ -189,6 +229,7 @@ async function bootstrap() {
   }
 
   screenRoot.addEventListener("click", handleFieldInteraction);
+  screenRoot.addEventListener("click", handleLabInteraction);
 
   window.addEventListener("hashchange", () => {
     renderScreen(location.hash.slice(1), { syncHash: false });
