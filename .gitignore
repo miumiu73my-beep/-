@@ -1,0 +1,21 @@
+# Local secrets / credentials
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.mobileprovision
+secrets.*
+credentials.*
+
+# Local save exports / backups
+yasai-seijo-save-*.json
+*.local-backup.json
+
+# OS / editor files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
