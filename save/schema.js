@@ -3,8 +3,9 @@ import {
   getFieldExpansionLevel,
   resolveFieldExpansionLevel,
 } from "../data/economy.js";
+import { DEFAULT_BASE_QUALITY } from "../data/quality.js";
 
-export const SAVE_VERSION = 3;
+export const SAVE_VERSION = 4;
 export const STARTING_MONEY = 300;
 
 export const CHARACTER_KEYS = Object.freeze([
@@ -74,7 +75,9 @@ export function createDefaultSaveData(now = new Date()) {
     },
 
     quality: {
-      base: 0,
+      // 1.0を「ふつう」品質の基準値とする。研究所はここを置き換えず、
+      // researchBonusとして別に加点する。
+      base: DEFAULT_BASE_QUALITY,
       researchBonus: 0,
       byCrop: {},
     },
@@ -192,6 +195,27 @@ export function migrateSaveData(rawData) {
     };
   }
 
+  if (version < 4) {
+    const quality = isPlainObject(migrated.quality)
+      ? { ...migrated.quality }
+      : {};
+    const savedBase = Number(quality.base);
+
+    migrated = {
+      ...migrated,
+      quality: {
+        ...quality,
+        base:
+          Number.isFinite(savedBase) && savedBase > 0
+            ? savedBase
+            : DEFAULT_BASE_QUALITY,
+        researchBonus: Math.max(0, Number(quality.researchBonus) || 0),
+        byCrop: isPlainObject(quality.byCrop) ? { ...quality.byCrop } : {},
+      },
+      version: 4,
+    };
+  }
+
   return {
     ...migrated,
     version: SAVE_VERSION,
@@ -220,6 +244,25 @@ export function normalizeSaveData(rawData) {
   normalized.field.size = { rows, columns };
   normalized.field.plots = Array.from({ length: plotCount }, (_, index) =>
     normalizePlot(savedPlots[index], index)
+  );
+
+  const baseQuality = Number(normalized.quality?.base);
+  normalized.quality.base =
+    Number.isFinite(baseQuality) && baseQuality > 0
+      ? baseQuality
+      : DEFAULT_BASE_QUALITY;
+  normalized.quality.researchBonus = Math.max(
+    0,
+    Number(normalized.quality?.researchBonus) || 0
+  );
+
+  const byCrop = isPlainObject(normalized.quality?.byCrop)
+    ? normalized.quality.byCrop
+    : {};
+  normalized.quality.byCrop = Object.fromEntries(
+    Object.entries(byCrop)
+      .map(([cropId, value]) => [cropId, Math.max(0, Number(value) || 0)])
+      .filter(([, value]) => Number.isFinite(value))
   );
 
   return normalized;
