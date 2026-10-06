@@ -1,4 +1,10 @@
-export const SAVE_VERSION = 2;
+import {
+  INITIAL_FIELD_LEVEL,
+  getFieldExpansionLevel,
+  resolveFieldExpansionLevel,
+} from "../data/economy.js";
+
+export const SAVE_VERSION = 3;
 export const STARTING_MONEY = 300;
 
 export const CHARACTER_KEYS = Object.freeze([
@@ -31,9 +37,9 @@ function createDefaultPlots(rows, columns) {
 }
 
 export function createDefaultSaveData(now = new Date()) {
-  // STEP 7で初期畑サイズが確定するまでは、現在の仮3×3表示を保存構造の初期値にする。
-  const rows = 3;
-  const columns = 3;
+  const initialField = getFieldExpansionLevel(INITIAL_FIELD_LEVEL);
+  const rows = initialField.rows;
+  const columns = initialField.columns;
 
   return {
     version: SAVE_VERSION,
@@ -54,6 +60,7 @@ export function createDefaultSaveData(now = new Date()) {
     },
 
     field: {
+      level: initialField.level,
       size: {
         rows,
         columns,
@@ -167,6 +174,24 @@ export function migrateSaveData(rawData) {
     };
   }
 
+  if (version < 3) {
+    const field = isPlainObject(migrated.field) ? { ...migrated.field } : {};
+    const fieldLevel = resolveFieldExpansionLevel(field);
+
+    migrated = {
+      ...migrated,
+      field: {
+        ...field,
+        level: fieldLevel.level,
+        size: {
+          rows: fieldLevel.rows,
+          columns: fieldLevel.columns,
+        },
+      },
+      version: 3,
+    };
+  }
+
   return {
     ...migrated,
     version: SAVE_VERSION,
@@ -178,8 +203,9 @@ export function normalizeSaveData(rawData) {
   const defaults = createDefaultSaveData();
   const normalized = mergeWithDefaults(defaults, migrated);
 
-  const rows = Math.max(1, Number(normalized.field?.size?.rows) || 3);
-  const columns = Math.max(1, Number(normalized.field?.size?.columns) || 3);
+  const fieldLevel = resolveFieldExpansionLevel(normalized.field);
+  const rows = fieldLevel.rows;
+  const columns = fieldLevel.columns;
   const plotCount = rows * columns;
   const savedPlots = Array.isArray(migrated.field?.plots)
     ? migrated.field.plots
@@ -190,6 +216,7 @@ export function normalizeSaveData(rawData) {
     0,
     Number(normalized.economy.money) || 0
   );
+  normalized.field.level = fieldLevel.level;
   normalized.field.size = { rows, columns };
   normalized.field.plots = Array.from({ length: plotCount }, (_, index) =>
     normalizePlot(savedPlots[index], index)
