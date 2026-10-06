@@ -7,6 +7,9 @@ export const CHARACTER_KEYS = Object.freeze([
   "shuka",
 ]);
 
+export const PORTRAIT_ATLAS_SRC = "./assets/characters/portraits.webp";
+export const CHIBI_ATLAS_SRC = "./assets/characters/chibi-atlas.webp";
+
 export const CHARACTERS = Object.freeze({
   ichika: Object.freeze({
     key: "ichika",
@@ -14,8 +17,7 @@ export const CHARACTERS = Object.freeze({
     fullName: "桐城一歌",
     receiverName: "海",
     mark: "一",
-    portraitSrc: "./assets/characters/portraits/ichika.svg",
-    chibiSrc: "./assets/characters/chibi/ichika.svg",
+    atlasIndex: 0,
     dialogue: Object.freeze({
       lab: "{{name}}、焦らなくていい。キミのペースで、一つずつ確かめていこう。",
       field: "{{name}}、大丈夫だ。今日できる分だけ、一緒に畑を見よう。",
@@ -28,8 +30,7 @@ export const CHARACTERS = Object.freeze({
     fullName: "鳴海千隼",
     receiverName: "真琴",
     mark: "千",
-    portraitSrc: "./assets/characters/portraits/chihaya.svg",
-    chibiSrc: "./assets/characters/chibi/chihaya.svg",
+    atlasIndex: 1,
     dialogue: Object.freeze({
       lab: "{{name}}、せや、ひとつずつでええ。分かったことから畑に返してこ。",
       field: "{{name}}、急がんでええよ。あんたの畑や、好きな順で育てたらええ。",
@@ -42,8 +43,7 @@ export const CHARACTERS = Object.freeze({
     fullName: "勅使河原雨流",
     receiverName: "みう",
     mark: "雨",
-    portraitSrc: "./assets/characters/portraits/uryu.svg",
-    chibiSrc: "./assets/characters/chibi/uryu.svg",
+    atlasIndex: 2,
     dialogue: Object.freeze({
       lab: "{{name}}、必要なところから確認しましょう。無理に全部覚える必要はないわ。",
       field: "{{name}}、順調ね。今日はここまで、という決め方でも十分よ。",
@@ -56,8 +56,7 @@ export const CHARACTERS = Object.freeze({
     fullName: "柏朱夏",
     receiverName: "小夜",
     mark: "朱",
-    portraitSrc: "./assets/characters/portraits/shuka.svg",
-    chibiSrc: "./assets/characters/chibi/shuka.svg",
+    atlasIndex: 3,
     dialogue: Object.freeze({
       lab: "{{name}}、おう！ 覚えたことを畑で試しゃいい。細けえことは気にすんな！",
       field: "{{name}}、おう、いい畑じゃねえか！ のんびりでも育つんだから気楽にいこうぜ！",
