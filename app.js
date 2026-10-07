@@ -35,11 +35,15 @@ import {
 } from "./screens/field.js";
 import { renderHomeScreen } from "./screens/home.js";
 import { renderInitialNameSetup } from "./screens/name-settings.js";
+import { renderTitleScreen } from "./screens/title.js";
 import {
   renderCharacterStage,
   renderFieldWalkers,
 } from "./screens/characters.js";
 
+const appShell = document.querySelector(".app-shell");
+const titleRoot = document.querySelector("#title-root");
+const returnToTitleButton = document.querySelector("#return-to-title");
 const screenRoot = document.querySelector("#screen-root");
 const screenCaption = document.querySelector("#screen-caption");
 const navButtons = [...document.querySelectorAll("[data-screen]")];
@@ -81,6 +85,14 @@ function updateBgmControls({ enabled, volume, trackKey, status }) {
 
   bgmStatus.textContent = descriptions[status] ?? "";
   bgmStatus.dataset.audioStatus = status;
+
+  const titleToggle = titleRoot?.querySelector("[data-title-bgm]");
+  if (titleToggle) {
+    titleToggle.textContent = bgmToggle?.textContent ?? "♪ BGM ON";
+    titleToggle.setAttribute("aria-pressed", String(enabled));
+  }
+  const titleStatus = titleRoot?.querySelector("[data-title-bgm-status]");
+  if (titleStatus) titleStatus.textContent = bgmStatus.textContent;
 }
 
 const bgmPlayer = createBgmPlayer(updateBgmControls);
@@ -92,6 +104,7 @@ const renderers = {
 };
 
 let activeScreen = null;
+let isTitleVisible = false;
 let gameState = null;
 let session = null;
 let savePromise = Promise.resolve();
@@ -105,6 +118,39 @@ let saveMutationInProgress = false;
 
 function normalizeScreen(value) {
   return Object.hasOwn(renderers, value) ? value : "field";
+}
+
+function showTitleScreen() {
+  if (!gameState || !titleRoot) return;
+
+  isTitleVisible = true;
+  titleRoot.innerHTML = renderTitleScreen(gameState, getSaveHealth());
+  document.body.classList.add("is-at-title");
+  appShell.inert = true;
+  appShell.setAttribute("aria-hidden", "true");
+  bgmPlayer.setScene("title");
+  updateBgmControls(bgmPlayer.getState());
+  titleRoot.querySelector("[data-title-start]")?.focus();
+}
+
+function enterGameFromTitle() {
+  if (!gameState || !isTitleVisible) return;
+
+  const needsSetup = !hasCompletedNameSetup(gameState);
+  isTitleVisible = false;
+  titleRoot.innerHTML = "";
+  document.body.classList.remove("is-at-title");
+  appShell.inert = false;
+  appShell.removeAttribute("aria-hidden");
+
+  renderScreen(needsSetup ? "field" : location.hash.slice(1));
+  syncNameSetupOverlay();
+
+  if (needsSetup) {
+    nameSetupRoot?.querySelector('[name="customName"]')?.focus();
+  } else {
+    document.querySelector(".nav-button.is-active")?.focus();
+  }
 }
 
 function buildRenderContext() {
@@ -203,6 +249,8 @@ function persistGameState(savedAt = getCurrentDateTime()) {
 }
 
 function refreshTimeDrivenScreen() {
+  if (isTitleVisible) return;
+
   if (activeScreen === "home") {
     const now = getCurrentDateTime();
     if (!getTimeSnapshot(now).isWeekend) {
@@ -653,6 +701,20 @@ async function bootstrap() {
 
   document.addEventListener("submit", handleNameSettingsSubmit);
 
+  titleRoot?.addEventListener("click", (event) => {
+    if (event.target.closest("[data-title-start]")) {
+      enterGameFromTitle();
+    } else if (event.target.closest("[data-title-bgm]")) {
+      // 既存のBGM操作を使い、iOSのユーザー操作による再生制限にも対応する。
+      bgmToggle?.click();
+    }
+  });
+
+  returnToTitleButton?.addEventListener("click", () => {
+    void persistGameState();
+    showTitleScreen();
+  });
+
   bgmToggle?.addEventListener("click", () => {
     const state = bgmPlayer.getState();
 
@@ -697,6 +759,7 @@ async function bootstrap() {
   });
 
   window.addEventListener("hashchange", () => {
+    if (isTitleVisible) return;
     renderScreen(location.hash.slice(1), { syncHash: false });
   });
 
@@ -735,12 +798,17 @@ async function bootstrap() {
     refreshTimeDrivenScreen();
   }, 30_000);
 
-  renderScreen(location.hash.slice(1));
-  syncNameSetupOverlay();
+  showTitleScreen();
 }
 
 bootstrap().catch((error) => {
   console.error("App startup failed:", error);
+  document.body.classList.remove("is-at-title");
+  if (titleRoot) titleRoot.innerHTML = "";
+  if (appShell) {
+    appShell.inert = false;
+    appShell.removeAttribute("aria-hidden");
+  }
   screenRoot.innerHTML = `
     <section class="scene">
       <div class="scene-card">
