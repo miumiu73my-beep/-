@@ -1,5 +1,5 @@
 const CACHE_PREFIX = "yasai-seijo-";
-const CACHE_VERSION = "step19-bgm-v1";
+const CACHE_VERSION = "step19-title-v1";
 const PRECACHE_NAME = `${CACHE_PREFIX}precache-${CACHE_VERSION}`;
 const RUNTIME_CACHE_NAME = `${CACHE_PREFIX}runtime-${CACHE_VERSION}`;
 
@@ -7,6 +7,7 @@ const APP_SHELL = [
   "./",
   "./index.html",
   "./app.js",
+  "./screens/title.js",
   "./audio/bgm.js",
   "./manifest.webmanifest",
   "./assets/styles.css",
@@ -16,6 +17,7 @@ const APP_SHELL = [
   "./assets/step14.css",
   "./assets/step16.css",
   "./assets/bgm.css",
+  "./assets/title.css",
   "./assets/backgrounds/lab.webp",
   "./assets/backgrounds/field.webp",
   "./assets/backgrounds/home.webp",
