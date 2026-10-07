@@ -44,6 +44,8 @@ import {
 const appShell = document.querySelector(".app-shell");
 const titleRoot = document.querySelector("#title-root");
 const returnToTitleButton = document.querySelector("#return-to-title");
+const manualSaveButton = document.querySelector("#manual-save-button");
+const manualSaveStatus = document.querySelector("#manual-save-status");
 const screenRoot = document.querySelector("#screen-root");
 const screenCaption = document.querySelector("#screen-caption");
 const navButtons = [...document.querySelectorAll("[data-screen]")];
@@ -127,6 +129,7 @@ function showTitleScreen() {
   titleRoot.innerHTML = renderTitleScreen(gameState, getSaveHealth());
   document.body.classList.add("is-at-title");
   appShell.inert = true;
+  nameSetupRoot.inert = true;
   appShell.setAttribute("aria-hidden", "true");
   bgmPlayer.setScene("title");
   updateBgmControls(bgmPlayer.getState());
@@ -141,6 +144,7 @@ function enterGameFromTitle() {
   titleRoot.innerHTML = "";
   document.body.classList.remove("is-at-title");
   appShell.inert = false;
+  nameSetupRoot.inert = false;
   appShell.removeAttribute("aria-hidden");
 
   renderScreen(needsSetup ? "field" : location.hash.slice(1));
@@ -710,9 +714,39 @@ async function bootstrap() {
     }
   });
 
-  returnToTitleButton?.addEventListener("click", () => {
-    void persistGameState();
+  manualSaveButton?.addEventListener("click", async () => {
+    if (!gameState || isTitleVisible || manualSaveButton.disabled) return;
+
+    manualSaveButton.disabled = true;
+    if (manualSaveStatus) {
+      manualSaveStatus.classList.remove("is-error");
+      manualSaveStatus.textContent = "セーブしています…";
+    }
+
+    try {
+      const saved = await persistGameState();
+      if (!saved) throw new Error(getSaveHealth().message || "セーブに失敗しました。");
+      if (manualSaveStatus) manualSaveStatus.textContent = "セーブしました ✓";
+    } catch (error) {
+      if (manualSaveStatus) {
+        manualSaveStatus.classList.add("is-error");
+        manualSaveStatus.textContent = error instanceof Error ? error.message : "セーブに失敗しました。";
+      }
+    } finally {
+      manualSaveButton.disabled = false;
+    }
+  });
+
+  returnToTitleButton?.addEventListener("click", async () => {
+    // 保存が完了してからタイトルへ戻り、「つづきから」で最新状態を再開できるようにする。
+    returnToTitleButton.disabled = true;
+    const saved = await persistGameState();
+    if (!saved && manualSaveStatus) {
+      manualSaveStatus.classList.add("is-error");
+      manualSaveStatus.textContent = getSaveHealth().message || "セーブに失敗しました。";
+    }
     showTitleScreen();
+    returnToTitleButton.disabled = false;
   });
 
   bgmToggle?.addEventListener("click", () => {
@@ -809,6 +843,7 @@ bootstrap().catch((error) => {
     appShell.inert = false;
     appShell.removeAttribute("aria-hidden");
   }
+  if (nameSetupRoot) nameSetupRoot.inert = false;
   screenRoot.innerHTML = `
     <section class="scene">
       <div class="scene-card">
