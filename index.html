@@ -19,13 +19,15 @@
   <link rel="stylesheet" href="./assets/step14.css" />
   <link rel="stylesheet" href="./assets/step16.css" />
   <link rel="stylesheet" href="./assets/bgm.css" />
+  <link rel="stylesheet" href="./assets/title.css" />
 </head>
-<body>
+<body class="is-at-title">
   <div class="app-shell">
     <header class="app-header">
       <p class="eyebrow">異世界菜園</p>
       <h1>野菜聖女</h1>
       <p id="screen-caption" class="screen-caption">畑</p>
+      <button id="return-to-title" class="return-to-title" type="button">タイトルへ</button>
       <div class="bgm-panel" role="group" aria-label="BGM設定">
         <button id="bgm-toggle" class="bgm-toggle" type="button" aria-pressed="false">♪ BGM ON</button>
         <label class="bgm-volume-label" for="bgm-volume">
@@ -55,6 +57,9 @@
   </div>
 
   <div id="name-setup-root" class="name-setup-root"></div>
+  <div id="title-root" class="title-root">
+    <div class="title-loading" role="status"><strong>野菜聖女</strong><span>読み込み中…</span></div>
+  </div>
 
   <noscript>このアプリを遊ぶにはJavaScriptを有効にしてください。</noscript>
   <script type="module" src="./app.js"></script>
