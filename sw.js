@@ -1,5 +1,5 @@
 const CACHE_PREFIX = "yasai-seijo-";
-const CACHE_VERSION = "step19-title-v1";
+const CACHE_VERSION = "step19-title-v2";
 const PRECACHE_NAME = `${CACHE_PREFIX}precache-${CACHE_VERSION}`;
 const RUNTIME_CACHE_NAME = `${CACHE_PREFIX}runtime-${CACHE_VERSION}`;
 
