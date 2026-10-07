@@ -32,19 +32,39 @@ body.is-at-title .app-shell {
   white-space: nowrap;
   border: 0;
 }
-/* 背景2枚目はタイトル画像が未配置の間のフォールバック */
+/* 画像の読み込み失敗時も、従来の畑背景と文字で操作を続けられる */
+.title-screen {
+  background: url("./backgrounds/field.webp") center / cover no-repeat, #264e43;
+}
 .title-art {
   position: absolute;
   inset: 0;
   z-index: -2;
-  background-image:
-    url("./title/title-art.jpg"),
-    url("./backgrounds/field.webp");
-  background-size: cover, cover;
-  background-position: center center, center center;
-  background-repeat: no-repeat;
-  image-rendering: auto;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  opacity: 0;
 }
+.title-art.is-loaded { opacity: 1; }
+.title-text-fallback {
+  position: absolute;
+  z-index: 1;
+  top: 34%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  margin: 0;
+  color: #fff4ca;
+  font-family: "Hiragino Mincho ProN", "Yu Mincho", serif;
+  font-size: clamp(3rem, 12vw, 5rem);
+  font-weight: 900;
+  letter-spacing: .06em;
+  white-space: nowrap;
+  text-align: center;
+  text-shadow: 0 3px 0 #285d49, 0 8px 20px rgba(0, 20, 10, .8);
+}
+.title-text-fallback[hidden] { display: none; }
 /* 画像下端だけ暗くして、畑・城・中央ロゴは見せる */
 .title-screen::after {
   content: "";
