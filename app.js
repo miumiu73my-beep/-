@@ -127,6 +127,18 @@ function showTitleScreen() {
 
   isTitleVisible = true;
   titleRoot.innerHTML = renderTitleScreen(gameState, getSaveHealth());
+  const titleImage = titleRoot.querySelector(".title-art");
+  const fallbackLogo = titleRoot.querySelector(".title-text-fallback");
+  if (titleImage) {
+    const syncTitleImage = () => {
+      const ready = titleImage.complete && titleImage.naturalWidth > 0;
+      titleImage.classList.toggle("is-loaded", ready);
+      if (fallbackLogo) fallbackLogo.hidden = ready;
+    };
+    titleImage.addEventListener("load", syncTitleImage);
+    titleImage.addEventListener("error", syncTitleImage);
+    if (titleImage.complete) syncTitleImage();
+  }
   document.body.classList.add("is-at-title");
   appShell.inert = true;
   nameSetupRoot.inert = true;
