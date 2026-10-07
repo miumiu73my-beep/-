@@ -10,7 +10,8 @@ export function renderTitleScreen(saveData, saveHealth = {}) {
   return `
     <section class="title-screen" role="dialog" aria-modal="true" aria-labelledby="title-heading">
       <h2 id="title-heading" class="title-screen-accessible-heading">野菜聖女</h2>
-      <div class="title-art" role="img" aria-label="野菜聖女のファンタジー農園と中央のタイトルロゴ"></div>
+      <img class="title-art" src="./assets/title/title-art.avif" alt="" decoding="async" />
+      <p class="title-text-fallback" aria-hidden="true">野菜聖女</p>
       <div class="title-bottom-ui">
         <div class="title-menu">
           <button class="title-start-button" type="button" data-title-start>
