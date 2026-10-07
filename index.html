@@ -27,7 +27,11 @@
       <p class="eyebrow">異世界菜園</p>
       <h1>野菜聖女</h1>
       <p id="screen-caption" class="screen-caption">畑</p>
-      <button id="return-to-title" class="return-to-title" type="button">タイトルへ</button>
+      <div class="app-header-utility" role="group" aria-label="セーブと画面移動">
+        <p id="manual-save-status" class="manual-save-status" role="status" aria-live="polite">自動保存 ON</p>
+        <button id="manual-save-button" class="manual-save-button" type="button">今すぐセーブ</button>
+        <button id="return-to-title" class="return-to-title" type="button">タイトルへ</button>
+      </div>
       <div class="bgm-panel" role="group" aria-label="BGM設定">
         <button id="bgm-toggle" class="bgm-toggle" type="button" aria-pressed="false">♪ BGM ON</button>
         <label class="bgm-volume-label" for="bgm-volume">
