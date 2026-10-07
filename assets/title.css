@@ -1,229 +1,152 @@
-/* タイトル画面: STEP 15背景・立ち絵アトラスを共用する */
+/* 添付タイトル画: 中央ロゴに文字を重ねず、操作系を画面下部に配置 */
 .title-root:empty { display: none; }
-
 .title-root {
   position: fixed;
   inset: 0;
   z-index: 200;
-  background: #153e35;
+  background: #102f29;
 }
-
-body.is-at-title {
-  overflow: hidden;
-}
-
+body.is-at-title { overflow: hidden; }
 body.is-at-title .app-shell {
   visibility: hidden;
   pointer-events: none;
 }
-
 .title-screen {
+  position: relative;
   width: min(100%, 720px);
   height: 100dvh;
   min-height: 100%;
   margin: 0 auto;
-  overflow-y: auto;
-  overscroll-behavior-y: contain;
-  -webkit-overflow-scrolling: touch;
-  display: flex;
-  padding: calc(24px + env(safe-area-inset-top)) max(16px, env(safe-area-inset-right))
-    calc(16px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
-  background:
-    linear-gradient(180deg, rgba(12, 61, 50, .45) 0%, rgba(10, 61, 49, .40) 38%, rgba(7, 43, 33, .87) 100%),
-    url("./backgrounds/field.webp") center / cover no-repeat,
-    #2b735b;
-  box-shadow: 0 0 48px rgba(4, 32, 24, .3);
-}
-
-.title-content {
-  width: min(100%, 540px);
-  margin: auto;
-  display: grid;
-  justify-items: center;
-  gap: clamp(10px, 2.5vh, 24px);
-  text-align: center;
-}
-
-.title-brand { color: #fff9dd; }
-
-.title-overline {
-  margin: 0 0 8px;
-  font-size: clamp(.78rem, 2.8vw, 1rem);
-  font-weight: 800;
-  letter-spacing: .2em;
-  text-shadow: 0 2px 8px rgba(5, 37, 31, .85);
-}
-
-.title-brand h2 {
-  margin: 0;
-  color: #fff8d4;
-  font-family: "Hiragino Mincho ProN", "Yu Mincho", serif;
-  font-size: clamp(3.3rem, 13vw, 5.5rem);
-  font-weight: 900;
-  letter-spacing: .12em;
-  line-height: 1.25;
-  text-indent: .12em;
-  text-shadow: 0 4px 0 #2c694e, 0 8px 20px rgba(0, 28, 19, .75);
-}
-
-.title-tagline {
-  margin: 12px 0 0;
-  font-size: clamp(.82rem, 3.1vw, 1rem);
-  font-weight: 700;
-  line-height: 1.75;
-  text-shadow: 0 2px 8px rgba(0, 30, 20, .9);
-}
-
-.title-cast {
-  width: 100%;
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: clamp(6px, 2vw, 12px);
-  padding: 6px 0;
-}
-
-.title-character {
-  min-width: 0;
-  display: grid;
-  gap: 5px;
-  justify-items: center;
-}
-
-.title-character-picture {
-  position: relative;
-  width: 100%;
-  max-width: 100px;
-  aspect-ratio: .86;
+  isolation: isolate;
   overflow: hidden;
-  border: 2px solid rgba(255, 251, 220, .85);
-  border-radius: 16px;
-  background: linear-gradient(150deg, rgba(244, 251, 234, .94), rgba(153, 206, 165, .8));
-  box-shadow: 0 5px 16px rgba(0, 36, 24, .45);
+  background: #264e43;
 }
-
-.title-character-fallback {
+.title-screen-accessible-heading {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+/* 背景2枚目はタイトル画像が未配置の間のフォールバック */
+.title-art {
   position: absolute;
   inset: 0;
-  display: grid;
-  place-items: center;
-  color: #1f5948;
-  font-size: clamp(1.5rem, 5vw, 2.5rem);
-  font-weight: 900;
-}
-
-.title-character-sprite {
-  position: absolute;
-  inset: 0;
-  background-image: url("./characters/portraits.webp");
-  background-size: 400% 400%;
-  background-position: 0% var(--title-portrait-y);
+  z-index: -2;
+  background-image:
+    url("./title/title-art.jpg"),
+    url("./backgrounds/field.webp");
+  background-size: cover, cover;
+  background-position: center center, center center;
   background-repeat: no-repeat;
+  image-rendering: auto;
 }
-
-.title-character-name {
-  color: #fff9e4;
-  font-size: .84rem;
-  font-weight: 900;
-  text-shadow: 0 2px 7px rgba(0, 30, 20, .9);
+/* 画像下端だけ暗くして、畑・城・中央ロゴは見せる */
+.title-screen::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    transparent 65%,
+    rgba(9, 30, 24, .14) 75%,
+    rgba(5, 30, 23, .65) 91%,
+    rgba(5, 30, 23, .85) 100%
+  );
 }
-
-.title-menu {
-  width: min(100%, 420px);
-  padding: 18px clamp(14px, 4vw, 24px) 13px;
-  border: 2px solid rgba(255, 249, 211, .66);
-  border-radius: 22px;
-  background: rgba(249, 248, 226, .94);
-  color: #214638;
-  box-shadow: 0 10px 28px rgba(0, 32, 20, .35);
-  backdrop-filter: blur(10px);
-}
-
-.title-menu-label {
-  margin: 0 0 12px;
-  font-size: clamp(.84rem, 3vw, .96rem);
-  font-weight: 800;
-}
-
-.title-start-button {
-  width: 100%;
-  min-height: 58px;
-  padding: 12px 18px;
-  border: 2px solid #f3e8a9;
-  border-radius: 14px;
+.title-bottom-ui {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
   display: flex;
+  flex-direction: column;
   align-items: center;
+  gap: 7px;
+  padding:
+    12px max(20px, env(safe-area-inset-right))
+    calc(14px + env(safe-area-inset-bottom))
+    max(20px, env(safe-area-inset-left));
+  color: #fef8db;
+}
+.title-menu {
+  width: min(100%, 390px);
+  padding: 12px 12px 9px;
+  border: 1px solid rgba(255, 237, 175, .65);
+  border-radius: 20px;
+  text-align: center;
+  background: rgba(14, 58, 44, .76);
+  box-shadow: 0 12px 34px rgba(0, 24, 13, .45);
+  -webkit-backdrop-filter: blur(9px);
+  backdrop-filter: blur(9px);
+}
+.title-start-button {
+  min-height: 56px;
+  width: 100%;
+  padding: 10px 16px;
+  display: flex;
   justify-content: center;
-  gap: 16px;
-  color: white;
-  background: #116d53;
-  box-shadow: 0 5px 0 #0c4b3a;
-  font-size: clamp(1.12rem, 4vw, 1.34rem);
+  align-items: center;
+  gap: 18px;
+  border: 2px solid #f4daa0;
+  border-radius: 14px;
+  color: #183e31;
+  background: linear-gradient(#fff9d4, #ecd8a0);
+  box-shadow: 0 4px 0 #765e37;
+  font-size: clamp(1.08rem, 4vw, 1.3rem);
   font-weight: 900;
-  letter-spacing: .06em;
+  letter-spacing: .05em;
   cursor: pointer;
 }
-
-.title-start-button:active {
-  transform: translateY(3px);
-  box-shadow: 0 2px 0 #0c4b3a;
-}
-
+.title-start-button:active { transform: translateY(3px); box-shadow: 0 1px 0 #765e37; }
 .title-menu-note {
-  margin: 12px 0 9px;
-  font-size: .79rem;
+  margin: 10px 0 1px;
+  font-size: .77rem;
   line-height: 1.5;
+  font-weight: 700;
 }
-
-.title-save-warning {
-  margin: 8px 0;
-  padding: 8px;
-  border-radius: 8px;
-  background: #fff0ce;
-  color: #773e28;
-  font-size: .75rem;
-  line-height: 1.5;
-}
-
 .title-bgm-button {
-  min-height: 38px;
-  padding: 7px 16px;
-  border: 1px solid #bfd7c4;
-  border-radius: 10px;
-  color: #185742;
-  background: #e7f2e5;
+  min-height: 35px;
+  padding: 6px 16px;
+  border: 1px solid rgba(246, 226, 170, .68);
+  border-radius: 999px;
+  color: #fff8df;
+  background: rgba(13, 51, 40, .7);
   font-size: .82rem;
   font-weight: 800;
   cursor: pointer;
 }
-
-.title-bgm-button[aria-pressed="true"] {
-  color: #fff;
-  background: #116d53;
-}
-
+.title-bgm-button[aria-pressed="true"] { background: rgba(22, 115, 76, .9); }
 .title-bgm-status {
-  margin: 6px 0 0;
+  margin: 0;
   min-height: 1em;
-  color: #456358;
-  font-size: .69rem;
-  line-height: 1.4;
+  font-size: .67rem;
+  line-height: 1.3;
+  color: #fff8df;
+  text-align: center;
 }
-
+.title-save-warning {
+  margin: 9px 0 2px;
+  padding: 8px;
+  border-radius: 8px;
+  color: #643427;
+  background: #fff1d2;
+  font-size: .75rem;
+  line-height: 1.5;
+}
 .title-start-button:focus-visible,
 .title-bgm-button:focus-visible,
-.return-to-title:focus-visible {
-  outline: 3px solid #e6b659;
-  outline-offset: 4px;
+.return-to-title:focus-visible,
+.manual-save-button:focus-visible {
+  outline: 3px solid #ffdc88;
+  outline-offset: 3px;
 }
-
-.title-footer {
-  margin: 0;
-  color: #f6f2d8;
-  font-size: .79rem;
-  font-weight: 700;
-  text-shadow: 0 2px 8px rgba(0, 30, 20, .9);
-}
-
 .title-loading {
   width: 100%;
   min-height: 100dvh;
@@ -234,41 +157,57 @@ body.is-at-title .app-shell {
   color: #fff8d4;
   text-align: center;
 }
-
 .title-loading strong {
   font-size: clamp(2.2rem, 9vw, 4rem);
   font-family: "Hiragino Mincho ProN", "Yu Mincho", serif;
 }
-
 .title-loading span { font-size: .9rem; }
 
-.app-header { position: relative; }
-
+/* 全画面でセーブとタイトルにアクセスできる */
+.app-header-utility {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-top: 10px;
+}
+.manual-save-status {
+  flex: 1 1 auto;
+  min-width: 112px;
+  margin: 0;
+  font-size: .72rem;
+  color: var(--green-900);
+  font-weight: 700;
+}
+.manual-save-status.is-error { color: #9a3f31; }
+.manual-save-button,
 .return-to-title {
-  position: absolute;
-  top: calc(14px + env(safe-area-inset-top));
-  right: max(18px, env(safe-area-inset-right));
   min-height: 38px;
   padding: 7px 12px;
-  border: 1px solid rgba(15, 107, 85, .22);
+  border: 1px solid rgba(15,107,85,.22);
   border-radius: 12px;
-  color: #0d5949;
-  background: #e5f0e5;
   font-size: .78rem;
   font-weight: 800;
   cursor: pointer;
 }
-
-@media (max-height: 680px) {
-  .title-screen { padding-top: calc(12px + env(safe-area-inset-top)); }
-  .title-content { gap: 9px; }
-  .title-cast { padding: 0; }
-  .title-character-picture { max-width: 75px; }
-  .title-tagline { margin-top: 6px; }
-  .title-menu { padding-top: 11px; }
-  .title-start-button { min-height: 50px; }
+.manual-save-button {
+  color: #fff;
+  background: var(--green-700);
+}
+.manual-save-button:disabled { opacity: .55; cursor: wait; }
+.return-to-title {
+  position: static;
+  color: var(--green-900);
+  background: var(--green-100);
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .title-start-button { transition: none; }
+@media (max-height: 650px) {
+  .title-bottom-ui { gap: 4px; padding-bottom: calc(5px + env(safe-area-inset-bottom)); }
+  .title-menu { padding: 8px; }
+  .title-start-button { min-height: 46px; }
+  .title-menu-note { margin: 5px 0 0; font-size: .72rem; }
+  .title-bgm-button { min-height: 30px; }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .title-menu { background: rgba(14, 58, 44, .95); backdrop-filter: none; }
 }
