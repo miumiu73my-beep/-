@@ -89,7 +89,10 @@ export function createDefaultSaveData(now = new Date()) {
 
     lastSavedAt: now.toISOString(),
 
-    settings: {},
+    settings: {
+      bgmEnabled: false,
+      bgmVolume: 0.5,
+    },
   };
 }
 
@@ -264,6 +267,12 @@ export function normalizeSaveData(rawData) {
       .map(([cropId, value]) => [cropId, Math.max(0, Number(value) || 0)])
       .filter(([, value]) => Number.isFinite(value))
   );
+
+  normalized.settings.bgmEnabled = normalized.settings.bgmEnabled === true;
+  const savedVolume = Number(normalized.settings.bgmVolume);
+  normalized.settings.bgmVolume = Number.isFinite(savedVolume)
+    ? Math.max(0, Math.min(1, savedVolume))
+    : 0.5;
 
   return normalized;
 }

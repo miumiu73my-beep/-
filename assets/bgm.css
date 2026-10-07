@@ -1,0 +1,63 @@
+/* 全画面共通BGM操作：画面更新でも再作成しない */
+.bgm-panel {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin-top: 10px;
+}
+
+.bgm-toggle {
+  min-height: 38px;
+  padding: 7px 12px;
+  border: 1px solid rgba(15, 107, 85, 0.23);
+  border-radius: 12px;
+  background: var(--green-100);
+  color: var(--green-900);
+  font-size: 0.82rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.bgm-toggle[aria-pressed="true"] {
+  background: var(--green-700);
+  color: #fff;
+}
+
+.bgm-toggle:focus-visible,
+.bgm-volume:focus-visible {
+  outline: 3px solid var(--green-300);
+  outline-offset: 2px;
+}
+
+.bgm-volume-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.bgm-volume {
+  width: clamp(92px, 27vw, 160px);
+  accent-color: var(--green-700);
+  cursor: pointer;
+}
+
+.bgm-status {
+  margin: 5px 0 0;
+  min-height: 1.1em;
+  color: var(--muted);
+  font-size: 0.7rem;
+  line-height: 1.4;
+}
+
+.bgm-status[data-audio-status="missing"],
+.bgm-status[data-audio-status="error"] {
+  color: #96502d;
+}
+
+@media (orientation: landscape) and (max-height: 520px) {
+  .bgm-panel { margin-top: 5px; }
+}

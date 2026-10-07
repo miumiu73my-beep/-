@@ -1,4 +1,5 @@
 import { SCREEN_META } from "./data/app-data.js";
+import { BGM_TRACKS, createBgmPlayer } from "./audio/bgm.js";
 import {
   CHARACTER_KEYS,
   getCharacter,
@@ -43,6 +44,46 @@ const screenRoot = document.querySelector("#screen-root");
 const screenCaption = document.querySelector("#screen-caption");
 const navButtons = [...document.querySelectorAll("[data-screen]")];
 const nameSetupRoot = document.querySelector("#name-setup-root");
+const bgmToggle = document.querySelector("#bgm-toggle");
+const bgmVolume = document.querySelector("#bgm-volume");
+const bgmStatus = document.querySelector("#bgm-status");
+
+function updateBgmControls({ enabled, volume, trackKey, status }) {
+  const needsGesture = ["ready", "blocked", "paused"].includes(status);
+
+  if (bgmToggle) {
+    bgmToggle.textContent = enabled
+      ? (needsGesture ? "▶ BGM再生" : "♪ BGM OFF")
+      : "♪ BGM ON";
+    bgmToggle.setAttribute("aria-pressed", String(enabled));
+  }
+
+  if (bgmVolume) {
+    const percent = String(Math.round(volume * 100));
+    if (bgmVolume.value !== percent) bgmVolume.value = percent;
+    bgmVolume.setAttribute("aria-valuetext", percent + "％");
+  }
+
+  if (!bgmStatus) return;
+
+  const file = trackKey ? BGM_TRACKS[trackKey]?.file : null;
+  const label = trackKey ? BGM_TRACKS[trackKey]?.label : null;
+  const descriptions = {
+    off: "BGMは停止中です。",
+    ready: "再生するには「BGM再生」を押してください。",
+    loading: "BGMを読み込んでいます…",
+    playing: "再生中：" + (label ?? "BGM"),
+    missing: "音源が未配置か読み込めません：" + (file ?? "MP3"),
+    blocked: "再生が制限されています。「BGM再生」を押してください。",
+    paused: "BGMを一時停止しています。",
+    error: "BGMを再生できませんでした。OFF→ONで再試行できます。",
+  };
+
+  bgmStatus.textContent = descriptions[status] ?? "";
+  bgmStatus.dataset.audioStatus = status;
+}
+
+const bgmPlayer = createBgmPlayer(updateBgmControls);
 
 const renderers = {
   lab: renderLabScreen,
@@ -140,6 +181,8 @@ function renderScreen(screenKey, { syncHash = true } = {}) {
   if (syncHash && location.hash !== `#${nextScreen}`) {
     history.replaceState(null, "", `#${nextScreen}`);
   }
+
+  bgmPlayer.setScene(nextScreen, dateSession);
 }
 
 function persistGameState(savedAt = getCurrentDateTime()) {
@@ -431,6 +474,8 @@ async function replaceStoredGameState(operation) {
     await savePromise.catch(() => null);
     gameState = await operation();
     dateSession = null;
+    bgmPlayer.applyPreferences(gameState.settings);
+    bgmPlayer.setScene(activeScreen ?? "field", dateSession);
     refreshSessionFromGameState();
     syncNameSetupOverlay();
     return gameState;
@@ -590,6 +635,7 @@ async function bootstrap() {
   const bootTime = getCurrentDateTime();
 
   gameState = await loadGameData();
+  bgmPlayer.applyPreferences(gameState.settings);
 
   const previousSavedAt = gameState.lastSavedAt
     ? new Date(gameState.lastSavedAt)
@@ -606,6 +652,32 @@ async function bootstrap() {
   await persistGameState(bootTime);
 
   document.addEventListener("submit", handleNameSettingsSubmit);
+
+  bgmToggle?.addEventListener("click", () => {
+    const state = bgmPlayer.getState();
+
+    if (!state.enabled) {
+      bgmPlayer.setEnabled(true);
+    } else if (["ready", "blocked", "paused"].includes(state.status)) {
+      bgmPlayer.resume();
+    } else {
+      bgmPlayer.setEnabled(false);
+    }
+
+    gameState.settings ??= {};
+    gameState.settings.bgmEnabled = bgmPlayer.getState().enabled;
+    void persistGameState();
+  });
+
+  bgmVolume?.addEventListener("input", (event) => {
+    const value = Number(event.target.value) / 100;
+    bgmPlayer.changeVolume(value);
+    gameState.settings ??= {};
+    gameState.settings.bgmVolume = bgmPlayer.getState().volume;
+  });
+  bgmVolume?.addEventListener("change", () => {
+    void persistGameState();
+  });
 
   for (const button of navButtons) {
     button.addEventListener("click", () => {
@@ -629,6 +701,7 @@ async function bootstrap() {
   });
 
   window.addEventListener("pagehide", () => {
+    bgmPlayer.pauseForBackground();
     void persistGameState();
   });
 
@@ -640,14 +713,19 @@ async function bootstrap() {
     void persistGameState();
   });
 
-  window.addEventListener("pageshow", refreshTimeDrivenScreen);
+  window.addEventListener("pageshow", () => {
+    refreshTimeDrivenScreen();
+    bgmPlayer.resumeFromBackground();
+  });
 
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "hidden") {
+      bgmPlayer.pauseForBackground();
       void persistGameState();
     } else {
       // バックグラウンド中に経過した現実時間を、復帰直後の畑表示へ反映する。
       refreshTimeDrivenScreen();
+      bgmPlayer.resumeFromBackground();
     }
   });
 

@@ -1,5 +1,5 @@
 const CACHE_PREFIX = "yasai-seijo-";
-const CACHE_VERSION = "step15-v1";
+const CACHE_VERSION = "step19-bgm-v1";
 const PRECACHE_NAME = `${CACHE_PREFIX}precache-${CACHE_VERSION}`;
 const RUNTIME_CACHE_NAME = `${CACHE_PREFIX}runtime-${CACHE_VERSION}`;
 
@@ -7,6 +7,7 @@ const APP_SHELL = [
   "./",
   "./index.html",
   "./app.js",
+  "./audio/bgm.js",
   "./manifest.webmanifest",
   "./assets/styles.css",
   "./assets/step10.css",
@@ -14,6 +15,7 @@ const APP_SHELL = [
   "./assets/step13.css",
   "./assets/step14.css",
   "./assets/step16.css",
+  "./assets/bgm.css",
   "./assets/backgrounds/lab.webp",
   "./assets/backgrounds/field.webp",
   "./assets/backgrounds/home.webp",
@@ -44,7 +46,7 @@ const APP_SHELL = [
 ];
 
 const STATIC_ASSET_PATTERN =
-  /\.(?:html|css|js|json|webmanifest|png|jpe?g|webp|svg|gif|avif|woff2?)$/i;
+  /\.(?:html|css|js|json|webmanifest|png|jpe?g|webp|svg|gif|avif|woff2?|mp3)$/i;
 
 function scopeUrl(path) {
   return new URL(path, self.registration.scope).href;
@@ -140,6 +142,9 @@ self.addEventListener("fetch", (event) => {
   const { request } = event;
 
   if (request.method !== "GET" || !isAppRequest(request)) return;
+
+  // メディアのRange応答(206)はブラウザに任せる。音源が未配置でもSW導入を妨げない。
+  if (request.headers.has("range")) return;
 
   if (request.mode === "navigate") {
     event.respondWith(handleNavigation(request));
